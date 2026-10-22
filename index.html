@@ -162,16 +162,19 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        #currentMonthLabel { display: none; }
         /* Seletor de mês compacto no celular */
         @media (max-width: 1023px) {
+            #currentMonthWrap { position: relative; }
+            #currentMonthLabel {
+                display: block; white-space: nowrap; text-align: center;
+                font-size: 12px; font-weight: 600; line-height: 1.75rem; padding: 0 4px;
+            }
             #currentMonthInput {
                 -webkit-appearance: none; appearance: none;
-                width: 7.6rem !important; min-width: 0; height: 1.75rem; line-height: 1.75rem;
-                padding: 0 !important; margin: 0; overflow: hidden;
-                text-align: center !important; text-align-last: center;
+                position: absolute; inset: 0; width: 100% !important; height: 100%;
+                opacity: 0; margin: 0; padding: 0 !important; font-size: 16px;
             }
-            #currentMonthInput::-webkit-calendar-picker-indicator { display: none; }
-            #currentMonthInput::-webkit-date-and-time-value { text-align: center; min-height: 0; }
             #prevMonthBtn, #nextMonthBtn {
                 width: 1.75rem; height: 1.75rem; padding: 0 !important;
                 display: flex; align-items: center; justify-content: center;
@@ -831,7 +834,10 @@
 
                         <div class="flex items-center gap-0.5 lg:gap-1 bg-black/5 dark:bg-white/5 backdrop-blur-md p-1 lg:p-1.5 rounded-2xl border border-black/10 dark:border-white/10 shadow-sm flex-none min-w-0">
                             <button id="prevMonthBtn" class="p-1.5 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl transition shrink-0"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
-                            <input type="month" id="currentMonthInput" class="bg-transparent font-semibold text-xs lg:text-sm outline-none px-1 cursor-pointer [color-scheme:dark] w-full lg:w-auto min-w-0 text-center lg:text-left">
+                            <div id="currentMonthWrap" class="min-w-0">
+                                <span id="currentMonthLabel"></span>
+                                <input type="month" id="currentMonthInput" class="bg-transparent font-semibold text-xs lg:text-sm outline-none px-1 cursor-pointer [color-scheme:dark] w-full lg:w-auto min-w-0 text-center lg:text-left">
+                            </div>
                             <button id="nextMonthBtn" class="p-1.5 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl transition shrink-0"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
                         </div>
 
@@ -3699,7 +3705,16 @@
             return total;
         }
 
+        function updateMonthLabel() {
+            const lbl = document.getElementById('currentMonthLabel');
+            if (!lbl || !currentMonth) return;
+            const [y, m] = currentMonth.split('-').map(Number);
+            const nome = new Date(y, m - 1, 1).toLocaleDateString('pt-BR', { month: 'long' });
+            lbl.textContent = `${nome}/${String(y % 100).padStart(2, '0')}`;
+        }
+
         function updateDashboard() {
+            updateMonthLabel();
             ensureMonthExists(currentMonth);
             renderTransactionsList();
             updateExpensesTabView();
