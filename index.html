@@ -195,10 +195,39 @@
             .main-content { margin-left: 0; padding: 14px; }
         }
 
-        /* ==================================================================
-           OTIMIZAÇÕES PARA MOBILE / iOS (Safari, PWA em tela de início)
-        ================================================================== */
+        /* ESTILOS DE MEDALHAS & CONQUISTAS (NEON / LOCKED) */
+        .badge-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .badge-card.locked {
+            filter: grayscale(100%);
+            opacity: 0.5;
+            border-color: rgba(150, 150, 150, 0.15) !important;
+        }
+        .badge-card.unlocked {
+            filter: grayscale(0%);
+            opacity: 1;
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.25);
+            border-color: rgba(245, 158, 11, 0.5) !important;
+        }
+        .badge-card.unlocked .badge-icon {
+            animation: badgeGlowPulse 2.5s infinite alternate;
+        }
+        @keyframes badgeGlowPulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.4)); }
+            100% { transform: scale(1.08); filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.8)); }
+        }
 
+        /* ANIMAÇÃO DO FOGO DE STREAK */
+        .streak-fire-active {
+            animation: firePulse 1.2s infinite alternate;
+        }
+        @keyframes firePulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 2px #f97316); }
+            100% { transform: scale(1.2) rotate(6deg); filter: drop-shadow(0 0 10px #ef4444); }
+        }
+
+        /* OTIMIZAÇÕES PARA MOBILE / iOS */
         html {
             height: 100%;
             -webkit-text-size-adjust: 100%;
@@ -206,37 +235,31 @@
 
         body {
             min-height: 100%;
-            min-height: 100dvh; /* considera a barra dinâmica do Safari no iOS */
-            overscroll-behavior-y: none; /* evita o "puxão" de recarregar/mostrar fundo no bounce */
+            min-height: 100dvh;
+            overscroll-behavior-y: none;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Remove o retângulo cinza que o iOS mostra ao tocar em links/botões */
         * {
             -webkit-tap-highlight-color: transparent;
         }
 
         a, button, .nav-item, label {
-            touch-action: manipulation; /* resposta mais rápida ao toque, sem zoom de duplo-tap */
+            touch-action: manipulation;
         }
 
-        /* O Safari no iOS dá zoom automático ao focar em <input>/<select> com fonte < 16px.
-           Forçamos 16px apenas em telas pequenas para impedir esse zoom indesejado. */
         @media (max-width: 768px) {
             input, select, textarea {
                 font-size: 16px !important;
             }
         }
 
-        /* Scroll nativo (inercial) e sem "vazamento" de rolagem para o fundo da página,
-           dentro de listas, tabelas e modais */
         [class~="overflow-y-auto"],
         [class~="overflow-x-auto"] {
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
         }
 
-        /* Respeita a área segura (notch, Dynamic Island e barra de gestos) do iPhone */
         .sidebar {
             padding-top: max(20px, env(safe-area-inset-top));
             padding-left: max(20px, env(safe-area-inset-left));
@@ -257,8 +280,6 @@
             }
         }
 
-        /* Modais: respeitam a área segura e não deixam a página de fundo rolar/"vazar"
-           quando o teclado do iOS abre ou durante o bounce de rolagem */
         #profileModal, #profileLoginModal, #novaMetaModal, #contribuirMetaModal,
         #novoCartaoModal, #novaTransacaoModal, #historyModal, #editModal,
         #novaAssinaturaModal, #categoryModal, #infoModal, #githubSyncModal {
@@ -275,16 +296,11 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        /* ==================================================================
-           DOCK DE NAVEGAÇÃO INFERIOR (estilo "dock" para mobile/tablet),
-           reaproveitando as cores do projeto (glass-panel / nav-item)
-        ================================================================== */
         .bottom-dock {
-            display: none; /* só aparece em telas <= 1024px, ver media query abaixo */
+            display: none;
         }
 
         @media (max-width: 1024px) {
-            /* O menu horizontal antigo (dentro da sidebar) some, pois vira a dock inferior */
             .sidebar .nav-menu {
                 display: none;
             }
@@ -330,7 +346,6 @@
                 font-weight: 600;
             }
 
-            /* Garante espaço no fim da página para a dock flutuante não cobrir conteúdo */
             .main-content {
                 padding-bottom: max(96px, calc(env(safe-area-inset-bottom) + 84px)) !important;
             }
@@ -346,12 +361,8 @@
             }
         }
 
-        /* ==================================================================
-           MENU DE AÇÕES DO CABEÇALHO (Tema/Histórico/Limpar/Backup/Importar/Privacidade)
-           Desktop: barra de ícones (como antes). Mobile: menu "kebab" compacto.
-        ================================================================== */
         .header-more-btn {
-            display: none; /* só aparece em telas menores, ver media query abaixo */
+            display: none;
         }
 
         .header-actions-group {
@@ -381,7 +392,7 @@
         }
         .header-action-btn:hover { background: rgba(150, 150, 150, 0.12); }
         .header-action-btn i { font-size: 12px; }
-        .header-action-btn span { display: none; } /* rótulos só aparecem no dropdown mobile */
+        .header-action-btn span { display: none; }
 
         @media (max-width: 1023px) {
             .header-more-btn {
@@ -427,7 +438,6 @@
             .header-action-btn span { display: inline; font-size: 12px; font-weight: 500; }
         }
 
-        /* Alvos de toque maiores em telas pequenas — Apple recomenda mín. 44x44px */
         @media (max-width: 640px) {
             header button,
             header label,
@@ -435,13 +445,258 @@
             .nav-item {
                 min-height: 40px;
             }
+        }
+        /* Botão flutuante redondo de Novo Lançamento */
+        #openNewTransactionBtn {
+            position: fixed !important;
+            right: 24px !important;
+            bottom: 24px !important;
+            width: 58px !important;
+            height: 58px !important;
+            min-height: 58px !important;
+            min-width: 58px !important;
+            border-radius: 9999px !important;
+            background: #4f46e5 !important;
+            color: #ffffff !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: 0 10px 25px -3px rgba(79, 70, 229, 0.5), 0 4px 10px -2px rgba(79, 70, 229, 0.3) !important;
+            z-index: 85 !important;
+            cursor: pointer !important;
+            border: none !important;
+            outline: none !important;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s, box-shadow 0.2s !important;
+        }
+        #openNewTransactionBtn:hover {
+            background: #4338ca !important;
+            transform: scale(1.08) !important;
+            box-shadow: 0 14px 28px -2px rgba(79, 70, 229, 0.6), 0 6px 12px -4px rgba(79, 70, 229, 0.4) !important;
+        }
+        #openNewTransactionBtn:active {
+            transform: scale(0.95) !important;
+        }
+        @media (max-width: 1024px) {
             #openNewTransactionBtn {
-                min-height: 44px;
+                right: 18px !important;
+                bottom: max(88px, calc(env(safe-area-inset-bottom) + 78px)) !important;
+                width: 52px !important;
+                height: 52px !important;
+                min-height: 52px !important;
+                min-width: 52px !important;
             }
             #quickAiForm button[type="submit"] {
                 min-height: 44px;
             }
         }
+
+        /* ==============================================
+           DRAG & DROP DE BLOCOS (PERSONALIZAÇÃO DO PAINEL)
+        ================================================ */
+        .drag-block {
+            position: relative;
+            transition: box-shadow 0.2s ease, outline-color 0.2s ease;
+        }
+
+        body.edit-mode .drag-block {
+            outline: 1.5px dashed rgba(99, 102, 241, 0.45);
+            outline-offset: 4px;
+            border-radius: 28px;
+        }
+
+        .drag-handle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            cursor: grab;
+            z-index: 30;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+        }
+        .drag-handle:hover { background: rgba(99, 102, 241, 0.3); }
+        .drag-handle:active { cursor: grabbing; }
+        .drag-handle i { font-size: 12px; pointer-events: none; }
+
+        body.edit-mode .drag-handle {
+            display: flex;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .drag-block.dragging {
+            cursor: grabbing;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+            outline-color: rgba(99, 102, 241, 0.9);
+            opacity: 0.97;
+            pointer-events: none;
+        }
+
+        .drag-placeholder {
+            border-radius: 28px;
+            border: 2px dashed rgba(99, 102, 241, 0.55);
+            background: rgba(99, 102, 241, 0.08);
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+
+        body.dragging-active { cursor: grabbing !important; }
+        body.dragging-active * { -webkit-user-select: none !important; user-select: none !important; }
+
+        .edit-mode-bar {
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%) translateY(150px);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: calc(100vw - 24px);
+            padding: 10px 16px;
+            border-radius: 20px;
+            background: var(--dropdown-bg);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+            z-index: 300;
+            transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .edit-mode-bar.visible {
+            transform: translateX(-50%) translateY(0) !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+        }
+        .edit-mode-bar-text { font-size: 11px; opacity: 0.85; max-width: 320px; }
+        .edit-mode-bar-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 8px 14px;
+            border-radius: 14px;
+            background: rgba(150, 150, 150, 0.12);
+            transition: var(--transition);
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .edit-mode-bar-btn:hover { background: rgba(150, 150, 150, 0.22); }
+        .edit-mode-bar-btn.primary {
+            background: #4f46e5;
+            color: #fff;
+            box-shadow: 0 8px 18px rgba(79, 70, 229, 0.4);
+        }
+        .edit-mode-bar-btn.primary:hover { background: #4338ca; }
+
+        @media (max-width: 640px) {
+            .edit-mode-bar { bottom: 90px; transform: translateX(-50%) translateY(200px); }
+            .edit-mode-bar.visible { transform: translateX(-50%) translateY(0); }
+        }
+    
+        /* ALTA VISIBILIDADE EM MODAIS E POPUPS (TEMA CLARO E TEMA ESCURO) */
+        .fixed .glass-panel,
+        [id*="Modal"] .glass-panel,
+        [id*="modal"] .glass-panel {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid rgba(0, 0, 0, 0.14) !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+        }
+        .dark .fixed .glass-panel,
+        .dark [id*="Modal"] .glass-panel,
+        .dark [id*="modal"] .glass-panel {
+            background: rgba(15, 23, 42, 0.95) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75) !important;
+        }
+        /* Campos de entrada e seleção dentro dos modais */
+        .fixed .glass-panel input,
+        .fixed .glass-panel select,
+        .fixed .glass-panel textarea,
+        [id*="Modal"] input,
+        [id*="Modal"] select,
+        [id*="Modal"] textarea {
+            background: #f1f5f9 !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+            font-weight: 500;
+        }
+        .fixed .glass-panel input::placeholder,
+        .fixed .glass-panel textarea::placeholder,
+        [id*="Modal"] input::placeholder,
+        [id*="Modal"] textarea::placeholder {
+            color: #64748b !important;
+            opacity: 1 !important;
+        }
+        .fixed .glass-panel input:focus,
+        .fixed .glass-panel select:focus,
+        .fixed .glass-panel textarea:focus,
+        [id*="Modal"] input:focus,
+        [id*="Modal"] select:focus,
+        [id*="Modal"] textarea:focus {
+            background: #ffffff !important;
+            border-color: #4f46e5 !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+        }
+        .dark .fixed .glass-panel input,
+        .dark .fixed .glass-panel select,
+        .dark .fixed .glass-panel textarea,
+        .dark [id*="Modal"] input,
+        .dark [id*="Modal"] select,
+        .dark [id*="Modal"] textarea {
+            background: rgba(255, 255, 255, 0.06) !important;
+            color: #ffffff !important;
+            border-color: rgba(255, 255, 255, 0.14) !important;
+        }
+        .dark .fixed .glass-panel input:focus,
+        .dark .fixed .glass-panel select:focus,
+        .dark .fixed .glass-panel textarea:focus,
+        .dark [id*="Modal"] input:focus,
+        .dark [id*="Modal"] select:focus,
+        .dark [id*="Modal"] textarea:focus {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-color: #818cf8 !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3) !important;
+        }
+        /* Barra de personalização no tema claro */
+        html:not(.dark) .edit-mode-bar {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid rgba(0, 0, 0, 0.16) !important;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.16) !important;
+        }
+        html:not(.dark) .edit-mode-bar-btn {
+            background: rgba(0, 0, 0, 0.07) !important;
+            color: #1e293b !important;
+        }
+        html:not(.dark) .edit-mode-bar-btn:hover {
+            background: rgba(0, 0, 0, 0.12) !important;
+        }
+        html:not(.dark) .edit-mode-bar-btn.primary {
+            background: #4f46e5 !important;
+            color: #ffffff !important;
+        }
+
     </style>
 </head>
 <body class="antialiased">
@@ -516,6 +771,7 @@
                         <li><a class="nav-item flex items-center gap-2 lg:gap-3.5 p-2 lg:p-2.5 rounded-2xl text-xs lg:text-sm" data-target="view-ganhos" data-title="Relatório de Ganhos"><i class="fa-solid fa-arrow-trend-up w-4 text-center"></i> Ganhos</a></li>
                         <li><a class="nav-item flex items-center gap-2 lg:gap-3.5 p-2 lg:p-2.5 rounded-2xl text-xs lg:text-sm" data-target="view-cartoes" data-title="Gerenciar Cartões"><i class="fa-regular fa-credit-card w-4 text-center"></i> Cartões</a></li>
                         <li><a class="nav-item flex items-center gap-2 lg:gap-3.5 p-2 lg:p-2.5 rounded-2xl text-xs lg:text-sm" data-target="view-metas" data-title="Metas & Objetivos"><i class="fa-solid fa-bullseye w-4 text-center"></i> Metas</a></li>
+                        <li><a class="nav-item flex items-center gap-2 lg:gap-3.5 p-2 lg:p-2.5 rounded-2xl text-xs lg:text-sm" data-target="view-conquistas" data-title="Galeria de Conquistas"><i class="fa-solid fa-award w-4 text-center"></i> Conquistas</a></li>
                         <li><a class="nav-item flex items-center gap-2 lg:gap-3.5 p-2 lg:p-2.5 rounded-2xl text-xs lg:text-sm" data-target="view-assinaturas" data-title="Assinaturas & Fixas"><i class="fa-solid fa-file-invoice-dollar w-4 text-center"></i> Assinaturas</a></li>
                         <li><a class="nav-item flex items-center gap-2 lg:gap-3.5 p-2 lg:p-2.5 rounded-2xl text-xs lg:text-sm" data-target="view-orcamentos" data-title="Orçamentos & Limites"><i class="fa-solid fa-sliders w-4 text-center"></i> Orçamentos</a></li>
                     </ul>
@@ -531,6 +787,7 @@
                 <li><a class="nav-item" data-target="view-ganhos" data-title="Relatório de Ganhos"><i class="fa-solid fa-arrow-trend-up"></i><span>Ganhos</span></a></li>
                 <li><a class="nav-item" data-target="view-cartoes" data-title="Gerenciar Cartões"><i class="fa-regular fa-credit-card"></i><span>Cartões</span></a></li>
                 <li><a class="nav-item" data-target="view-metas" data-title="Metas & Objetivos"><i class="fa-solid fa-bullseye"></i><span>Metas</span></a></li>
+                <li><a class="nav-item" data-target="view-conquistas" data-title="Galeria de Conquistas"><i class="fa-solid fa-award"></i><span>Conquistas</span></a></li>
                 <li><a class="nav-item" data-target="view-assinaturas" data-title="Assinaturas & Fixas"><i class="fa-solid fa-file-invoice-dollar"></i><span>Assinaturas</span></a></li>
                 <li><a class="nav-item" data-target="view-orcamentos" data-title="Orçamentos & Limites"><i class="fa-solid fa-sliders"></i><span>Orçamentos</span></a></li>
             </ul>
@@ -546,6 +803,16 @@
 
                 <div class="flex flex-col lg:flex-row lg:items-center gap-2 w-full lg:w-auto">
                     <div class="flex items-center justify-between lg:justify-start gap-2 w-full lg:w-auto">
+                        
+                        <!-- NOVO INDICADOR DE SEQUÊNCIA / STREAKS 🔥 -->
+                        <div id="headerStreakBadge" class="flex items-center gap-2 px-3 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 shadow-sm transition hover:scale-105 cursor-pointer shrink-0" title="Sequência de meses seguidos fechando no azul!">
+                            <span id="streakFireIcon" class="text-base streak-fire-active">🔥</span>
+                            <div class="flex flex-col leading-none">
+                                <span class="text-[9px] font-bold uppercase tracking-wider opacity-80">Sequência</span>
+                                <span id="headerStreakCount" class="text-xs lg:text-sm font-extrabold">0 meses</span>
+                            </div>
+                        </div>
+
                         <div class="flex items-center gap-1 bg-black/5 dark:bg-white/5 backdrop-blur-md p-1.5 rounded-2xl border border-black/10 dark:border-white/10 shadow-sm flex-1 lg:flex-none min-w-0">
                             <button id="prevMonthBtn" class="p-1.5 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl transition shrink-0"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
                             <input type="month" id="currentMonthInput" class="bg-transparent font-semibold text-xs lg:text-sm outline-none px-1 cursor-pointer [color-scheme:dark] w-full lg:w-auto min-w-0 text-center lg:text-left">
@@ -556,6 +823,7 @@
                             <button id="moreActionsBtn" title="Mais ações" class="header-more-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                             <div id="actionsGroup" class="header-actions-group">
                                 <button id="themeToggleBtn" title="Alternar Tema" class="header-action-btn"><i class="fa-solid fa-moon" id="themeIcon"></i><span>Alternar Tema</span></button>
+                                <button id="customizeLayoutBtn" title="Personalizar Layout" class="header-action-btn text-indigo-400"><i class="fa-solid fa-arrows-up-down-left-right"></i><span>Personalizar Layout</span></button>
                                 <button id="historyBtn" title="Histórico" class="header-action-btn text-indigo-500"><i class="fa-solid fa-chart-column"></i><span>Histórico</span></button>
                                 <button id="clearMonthBtn" title="Limpar mês" class="header-action-btn text-rose-500"><i class="fa-solid fa-trash"></i><span>Limpar mês</span></button>
                                 <button id="exportBtn" title="Backup" class="header-action-btn"><i class="fa-solid fa-download"></i><span>Backup (exportar)</span></button>
@@ -569,18 +837,17 @@
                         </div>
                     </div>
 
-                    <button id="openNewTransactionBtn" class="w-full lg:w-auto px-4 py-2.5 lg:px-5 lg:py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-semibold shadow-[0_8px_20px_rgba(79,70,229,0.4)] transition flex items-center justify-center gap-2 text-xs lg:text-sm shrink-0">
-                        <i class="fa-solid fa-plus text-xs"></i> <span class="hidden sm:inline">Nova Transação</span><span class="sm:hidden">Novo</span>
-                    </button>
+                    <!-- Botão de novo lançamento agora é um botão redondo flutuante fixo no canto inferior direito -->
                 </div>
             </header>
 
             <!-- ==============================================
                  VIEW 1: PAINEL 
             ================================================ -->
-            <div id="view-painel" class="view-section active flex-col gap-5 w-full">
+            <div id="view-painel" class="view-section active flex-col gap-5 w-full" data-dragzone="painel-blocks">
                 
-                <section class="glass-panel p-4 lg:p-5 relative overflow-hidden bg-gradient-to-r from-indigo-900/20 via-transparent to-cyan-900/20 border border-indigo-500/30">
+                <section class="glass-panel p-4 lg:p-5 relative overflow-hidden bg-gradient-to-r from-indigo-900/20 via-transparent to-cyan-900/20 border border-indigo-500/30 drag-block" data-block-id="quick-ai">
+                    <div class="drag-handle" title="Arraste para reordenar este bloco"><i class="fa-solid fa-grip-vertical"></i></div>
                     <div class="flex flex-col md:flex-row items-center justify-between gap-3">
                         <div class="flex items-center gap-3 w-full md:w-auto">
                             <div class="w-9 h-9 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/30">
@@ -604,8 +871,9 @@
                     </div>
                 </section>
 
-                <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
-                    <div class="glass-panel p-4 lg:p-5 flex flex-col justify-between">
+                <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5" id="statsGrid" data-dragzone="stats-blocks">
+                    <div class="glass-panel p-4 lg:p-5 flex flex-col justify-between drag-block" data-block-id="stat-saldo">
+                        <div class="drag-handle" title="Arraste para reordenar este cartão"><i class="fa-solid fa-grip-vertical"></i></div>
                         <div class="flex justify-between items-start mb-2 lg:mb-3">
                             <span class="text-xs font-medium opacity-70 truncate">Saldo em Conta</span>
                             <button id="editAccountBalanceBtn" class="w-7 h-7 rounded-xl bg-cyan-500/10 text-cyan-500 hover:bg-cyan-500/20 transition flex items-center justify-center shrink-0"><i class="fa-solid fa-pen text-[10px]"></i></button>
@@ -613,7 +881,8 @@
                         <h2 class="text-lg sm:text-xl lg:text-2xl font-bold text-cyan-500 truncate" id="totalAccountBalanceDisplay">R$ 0,00</h2>
                     </div>
 
-                    <div class="glass-panel p-4 lg:p-5 flex flex-col justify-between">
+                    <div class="glass-panel p-4 lg:p-5 flex flex-col justify-between drag-block" data-block-id="stat-renda">
+                        <div class="drag-handle" title="Arraste para reordenar este cartão"><i class="fa-solid fa-grip-vertical"></i></div>
                         <div class="flex justify-between items-start mb-2 lg:mb-3">
                             <span class="text-xs font-medium opacity-70 truncate">Renda Mensal</span>
                             <button id="editIncomeBtn" class="w-7 h-7 rounded-xl bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 transition flex items-center justify-center shrink-0"><i class="fa-solid fa-pen text-[10px]"></i></button>
@@ -621,16 +890,21 @@
                         <h2 class="text-lg sm:text-xl lg:text-2xl font-bold text-emerald-500 truncate" id="totalIncomeDisplay">R$ 0,00</h2>
                     </div>
 
-                    <div class="glass-panel p-4 lg:p-5 flex flex-col justify-between relative overflow-hidden">
+                    <div class="glass-panel p-4 lg:p-5 flex flex-col justify-between relative overflow-hidden drag-block" data-block-id="stat-gastos">
+                        <div class="drag-handle" title="Arraste para reordenar este cartão"><i class="fa-solid fa-grip-vertical"></i></div>
                         <div class="flex justify-between items-start mb-2 lg:mb-3">
                             <span class="text-xs font-medium opacity-70 truncate">Gastos</span>
                             <div class="w-7 h-7 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0"><i class="fa-solid fa-arrow-trend-up text-[10px]"></i></div>
                         </div>
                         <h2 class="text-lg sm:text-xl lg:text-2xl font-bold truncate" id="totalExpensesDisplay">R$ 0,00</h2>
-                        <p class="text-[11px] mt-1 opacity-75"><span id="expensePercentDisplay" class="font-medium text-rose-500">0%</span> da renda</p>
+                        <div class="flex flex-col mt-1">
+                            <p class="text-[11px] opacity-75"><span id="expensePercentDisplay" class="font-medium text-rose-500">0%</span> da renda</p>
+                            <p class="text-[10px] opacity-60 mt-0.5" title="De domingo a sábado da semana atual"><i class="fa-solid fa-calendar-week text-[9px] mr-1"></i>Nesta semana: <span id="weeklySpentDisplay" class="font-medium text-rose-400">R$ 0,00</span></p>
+                        </div>
                     </div>
 
-                    <div class="glass-panel p-4 lg:p-5 flex flex-col justify-between relative overflow-hidden">
+                    <div class="glass-panel p-4 lg:p-5 flex flex-col justify-between relative overflow-hidden drag-block" data-block-id="stat-sobra">
+                        <div class="drag-handle" title="Arraste para reordenar este cartão"><i class="fa-solid fa-grip-vertical"></i></div>
                         <div class="flex justify-between items-start mb-2 lg:mb-3">
                             <span class="text-xs font-medium opacity-70 truncate">Sobra Livre</span>
                             <div class="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0"><i class="fa-solid fa-piggy-bank text-[10px]"></i></div>
@@ -640,13 +914,8 @@
                     </div>
                 </section>
 
-                <section class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                    <div class="glass-panel p-4 lg:p-5">
-                        <h3 class="text-base font-bold mb-3">Evolução Mensal (Barras)</h3>
-                        <div class="relative h-56 sm:h-64 w-full">
-                            <canvas id="timelineChart"></canvas>
-                        </div>
-                    </div>
+                <section class="grid grid-cols-1 lg:grid-cols-2 gap-5 drag-block" data-block-id="timeline-transactions">
+                    <div class="drag-handle" title="Arraste para reordenar este bloco"><i class="fa-solid fa-grip-vertical"></i></div>
                     <div class="glass-panel p-4 lg:p-5 flex flex-col">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
                             <h2 class="text-base font-bold">Transações Recentes</h2>
@@ -683,9 +952,16 @@
                             <div class="grid grid-cols-1 gap-3 max-h-[200px] overflow-y-auto pr-1" id="raioXCardsContainer"></div>
                         </div>
                     </div>
+                    <div class="glass-panel p-4 lg:p-5">
+                        <h3 class="text-base font-bold mb-3">Evolução Mensal (Barras)</h3>
+                        <div class="relative h-56 sm:h-64 w-full">
+                            <canvas id="timelineChart"></canvas>
+                        </div>
+                    </div>
                 </section>
 
-                <section class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                <section class="grid grid-cols-1 lg:grid-cols-3 gap-5 drag-block" data-block-id="category-budget">
+                    <div class="drag-handle" title="Arraste para reordenar este bloco"><i class="fa-solid fa-grip-vertical"></i></div>
                     <div class="glass-panel p-4 lg:p-5 lg:col-span-2 flex flex-col justify-between">
                         <h3 class="text-base font-bold mb-3">Gastos por Categoria</h3>
                         <div class="relative h-56 sm:h-64 w-full flex justify-center items-center">
@@ -727,6 +1003,59 @@
                         </div>
                     </div>
                 </section>
+                
+                <section class="glass-panel p-4 lg:p-5 w-full flex flex-col gap-3 drag-block" data-block-id="net-worth">
+                    <div class="drag-handle" title="Arraste para reordenar este bloco"><i class="fa-solid fa-grip-vertical"></i></div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <h3 class="text-base font-bold">Evolução do Patrimônio (Saldo)</h3>
+                        <div class="flex gap-1 bg-black/5 dark:bg-white/5 p-1 rounded-xl">
+                            <button type="button" id="nwTab6m" class="px-3 py-1 rounded-lg bg-indigo-600 text-white text-[10px] transition shadow-sm">6 Meses</button>
+                            <button type="button" id="nwTab12m" class="px-3 py-1 rounded-lg opacity-70 text-[10px] transition hover:opacity-100">12 Meses</button>
+                        </div>
+                    </div>
+                    <div class="relative h-56 sm:h-64 w-full">
+                        <canvas id="netWorthChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- PROJEÇÃO FUTURA COM TABELA E GRÁFICO -->
+                <section class="glass-panel p-4 lg:p-5 w-full flex flex-col gap-3 drag-block" data-block-id="projection">
+                    <div class="drag-handle" title="Arraste para reordenar este bloco"><i class="fa-solid fa-grip-vertical"></i></div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div>
+                            <h3 class="text-base font-bold flex items-center gap-2">Projeção Futura <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i></h3>
+                            <p class="text-[11px] opacity-70" id="projectionSubtitle">Baseado no seu padrão de economia recente</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="flex gap-1 bg-black/5 dark:bg-white/5 p-1 rounded-xl">
+                                <button type="button" id="projViewChart" class="px-2.5 py-1.5 rounded-lg bg-indigo-600 text-white text-[10px] transition shadow-sm" title="Ver Gráfico"><i class="fa-solid fa-chart-line"></i></button>
+                                <button type="button" id="projViewTable" class="px-2.5 py-1.5 rounded-lg opacity-70 text-[10px] transition hover:opacity-100" title="Ver Tabela"><i class="fa-solid fa-table"></i></button>
+                            </div>
+                            <div class="flex gap-1 bg-black/5 dark:bg-white/5 p-1 rounded-xl">
+                                <button type="button" id="projTab6m" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-[10px] transition shadow-sm">6 Meses</button>
+                                <button type="button" id="projTab12m" class="px-3 py-1.5 rounded-lg opacity-70 text-[10px] transition hover:opacity-100">12 Meses</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="projectionChartWrapper" class="relative h-56 sm:h-64 w-full">
+                        <canvas id="projectionChart"></canvas>
+                    </div>
+                    
+                    <div id="projectionTableWrapper" class="hidden relative h-56 sm:h-64 w-full overflow-y-auto pr-2">
+                        <table class="w-full text-left text-xs">
+                            <thead class="sticky top-0 bg-[var(--dropdown-bg)] backdrop-blur-xl border-b border-black/10 dark:border-white/10 opacity-80 z-10">
+                                <tr>
+                                    <th class="py-2.5 px-2">Período</th>
+                                    <th class="py-2.5 px-2 text-right">Saldo Projetado</th>
+                                    <th class="py-2.5 px-2 text-right">Evolução Acumulada</th>
+                                </tr>
+                            </thead>
+                            <tbody id="projectionTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
             </div>
 
             <!-- ==============================================
@@ -757,6 +1086,13 @@
                                 <p class="text-xs opacity-70">Sem despesas no período</p>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-4 lg:p-5 w-full">
+                    <h3 class="text-base font-bold mb-3">Comparativo de Gastos por Categoria (Mês Atual vs Anterior)</h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="categoryComparisonChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -837,6 +1173,26 @@
                         <h3 class="font-bold text-base mb-1">Nenhuma meta cadastrada</h3>
                         <p class="text-xs opacity-70">Crie seu primeiro objetivo e comece a poupar.</p>
                     </div>
+                </div>
+            </div>
+
+            <!-- ==============================================
+                 NOVA VIEW 8: GALERIA DE CONQUISTAS 🏅
+            ================================================ -->
+            <div id="view-conquistas" class="view-section flex-col gap-5 w-full">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div>
+                        <h2 class="text-lg font-bold flex items-center gap-2">Galeria de Conquistas 🏅</h2>
+                        <p class="text-xs opacity-70">Bata as metas financeiras e ative o brilho neon das suas medalhas!</p>
+                    </div>
+                    <div class="px-3 py-1.5 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-xs font-semibold flex items-center gap-2">
+                        <span class="opacity-70">Desbloqueadas:</span>
+                        <span id="unlockedBadgesCount" class="text-amber-500 font-bold">0/6</span>
+                    </div>
+                </div>
+
+                <div id="badgesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- Preenchido dinamicamente via JS -->
                 </div>
             </div>
 
@@ -1263,7 +1619,48 @@
         </div>
     </div>
 
+    <!-- ==============================================
+         BARRA FLUTUANTE DE PERSONALIZAÇÃO (DRAG & DROP)
+    ================================================ -->
+        <!-- BOTÃO FLUTUANTE REDONDO FIXO: NOVO LANÇAMENTO (+) -->
+    <button id="openNewTransactionBtn" aria-label="Novo Lançamento" title="Novo Lançamento">
+        <i class="fa-solid fa-plus text-2xl"></i>
+    </button>
+
+    <div id="editModeBar" class="edit-mode-bar" style="display: none;">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-arrows-up-down-left-right text-indigo-400"></i>
+            <span class="edit-mode-bar-text">Modo de personalização ativo. Segure o ícone <i class="fa-solid fa-grip-vertical"></i> em cada bloco e arraste para reorganizar o painel.</span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+            <button id="resetLayoutBtn" class="edit-mode-bar-btn" title="Restaurar posições originais"><i class="fa-solid fa-rotate-left"></i><span>Restaurar padrão</span></button>
+            <button id="finishEditModeBtn" class="edit-mode-bar-btn primary"><i class="fa-solid fa-check"></i><span>Concluir</span></button>
+            <button id="closeEditModeBarBtn" class="edit-mode-bar-btn" title="Fechar aviso"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+    </div>
+
     <script>
+
+        // --- CAMADA SEGURA DE ARMAZENAMENTO LOCAL ---
+        // Salva no localStorage com confirmação de gravação (lê de volta e
+        // compara) e nunca deixa um erro passar em silêncio — isso é o que
+        // fazia os dados "sumirem" sem aviso nenhum (ex: no import do GitHub,
+        // que grava um volume de dados maior de uma vez só e pode esbarrar
+        // no limite de espaço do navegador).
+        if (navigator.storage && navigator.storage.persist) {
+            navigator.storage.persisted().then(isPersisted => {
+                if (!isPersisted) navigator.storage.persist();
+            }).catch(() => {});
+        }
+
+        function getLocalTodayDate() {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         // --- THEME MANAGER ---
         const themeToggleBtn = document.getElementById('themeToggleBtn');
         const themeIcon = document.getElementById('themeIcon');
@@ -1433,12 +1830,12 @@
             userDropdownMenu.classList.add('hidden');
         });
 
-        // Menu "mais ações" do cabeçalho (versão compacta para mobile)
+        // Menu "mais ações" do cabeçalho
         const headerActionsGroup = document.getElementById('actionsGroup');
         const moreActionsBtn = document.getElementById('moreActionsBtn');
 
         function positionHeaderActionsGroup() {
-            if (window.innerWidth >= 1024) return; // no desktop o menu é uma barra estática, não precisa posicionar
+            if (window.innerWidth >= 1024) return;
             const rect = moreActionsBtn.getBoundingClientRect();
             const menuWidth = headerActionsGroup.offsetWidth || 200;
             const margin = 12;
@@ -1577,6 +1974,7 @@
                 if(targetId === 'view-ganhos') updateGainsTabView();
                 if(targetId === 'view-cartoes') renderCardsView();
                 if(targetId === 'view-metas') renderGoalsView();
+                if(targetId === 'view-conquistas') renderBadgesView();
                 if(targetId === 'view-assinaturas') renderSubscriptionsView();
                 if(targetId === 'view-orcamentos') renderBudgetsView();
             });
@@ -1623,7 +2021,13 @@
             setTimeout(() => novaAssinaturaModal.classList.add('hidden'), 300);
         });
 
-        let currentMonth = new Date().toISOString().slice(0, 7);
+        let currentMonth = (function() {
+            try {
+                const saved = localStorage.getItem('findash_active_month');
+                if (saved && /^\d{4}-\d{2}$/.test(saved)) return saved;
+            } catch (e) {}
+            return getLocalTodayDate().slice(0, 7);
+        })();
         let activeTab = 'expense';
         let activeSubTab = 'extrato';
         let raioXTab = 'expense';
@@ -1635,6 +2039,11 @@
         let timelineChartInstance = null;
         let expensesCategoryChartInstance = null;
         let gainsCategoryChartInstance = null;
+        let netWorthChartInstance = null;
+        let categoryComparisonChartInstance = null;
+        let projectionChartInstance = null;
+        let netWorthSpan = 6;
+        let projectionSpan = 6;
         const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
 
         const paymentIcons = {
@@ -1668,6 +2077,7 @@
         
         const totalExpensesDisplay = document.getElementById('totalExpensesDisplay');
         const expensePercentDisplay = document.getElementById('expensePercentDisplay');
+        const weeklySpentDisplay = document.getElementById('weeklySpentDisplay');
         const remainingBalanceDisplay = document.getElementById('remainingBalanceDisplay');
         const savingsPercentDisplay = document.getElementById('savingsPercentDisplay');
         
@@ -1699,12 +2109,38 @@
             setTimeout(() => {
                 const toast = document.createElement('div');
                 const isGain = type === 'gain';
-                const neonStyle = isGain ? 'bg-emerald-500/25 text-emerald-200 border-2 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'bg-rose-500/25 text-rose-200 border-2 border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.4)]';
+                const isDark = document.documentElement.classList.contains('dark');
                 
-                toast.className = `fixed z-[300] flex items-center gap-3 p-4 rounded-2xl backdrop-blur-xl transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 scale-95 opacity-0 max-w-sm w-[90%] ${neonStyle}`;
+                let themeClasses = "";
+                let titleClass = "";
+                let msgClass = "";
+                
+                if (isGain) {
+                    if (isDark) {
+                        themeClasses = "bg-emerald-950/95 text-emerald-100 border-2 border-emerald-400 shadow-[0_0_30px_rgba(52,211,153,0.5)]";
+                        titleClass = "text-emerald-300 font-extrabold";
+                        msgClass = "text-emerald-100 font-medium";
+                    } else {
+                        themeClasses = "bg-white text-emerald-950 border-2 border-emerald-600 shadow-[0_18px_40px_rgba(5,150,105,0.28)] ring-2 ring-emerald-500/20";
+                        titleClass = "text-emerald-800 font-extrabold";
+                        msgClass = "text-emerald-900 font-medium";
+                    }
+                } else {
+                    if (isDark) {
+                        themeClasses = "bg-rose-950/95 text-rose-100 border-2 border-rose-400 shadow-[0_0_30px_rgba(251,113,133,0.5)]";
+                        titleClass = "text-rose-300 font-extrabold";
+                        msgClass = "text-rose-100 font-medium";
+                    } else {
+                        themeClasses = "bg-white text-rose-950 border-2 border-rose-600 shadow-[0_18px_40px_rgba(225,29,72,0.28)] ring-2 ring-rose-500/20";
+                        titleClass = "text-rose-800 font-extrabold";
+                        msgClass = "text-rose-900 font-medium";
+                    }
+                }
+                
+                toast.className = `fixed z-[300] flex items-center gap-3.5 p-4 rounded-2xl backdrop-blur-2xl transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 scale-95 opacity-0 max-w-sm w-[90%] ${themeClasses}`;
                 const iconHtml = isGain ? `<div class="text-2xl animate-bounce">✅</div>` : `<div class="text-2xl animate-pulse">⛔</div>`;
                     
-                toast.innerHTML = `<div class="shrink-0">${iconHtml}</div><div><h4 class="font-bold text-sm uppercase">${title}</h4><p class="text-xs mt-1 opacity-90">${message}</p></div>`;
+                toast.innerHTML = `<div class="shrink-0">${iconHtml}</div><div><h4 class="text-sm uppercase tracking-wide ${titleClass}">${title}</h4><p class="text-xs mt-1 ${msgClass}">${message}</p></div>`;
                 document.body.appendChild(toast);
                 
                 if (window.visualViewport) {
@@ -1718,6 +2154,170 @@
                 setTimeout(() => toast.classList.remove('scale-95', 'opacity-0'), 10);
                 setTimeout(() => { toast.classList.add('scale-95', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3500);
             }, 250);
+        }
+
+        // --- SISTEMA DE SEQUÊNCIAS (STREAKS 🔥) E CONQUISTAS / MEDALHAS 🏅 ---
+        function calculateStreak() {
+            const sortedMonths = Object.keys(dbData.months).sort().reverse();
+            let streak = 0;
+
+            for (let i = 0; i < sortedMonths.length; i++) {
+                const mStr = sortedMonths[i];
+                const m = dbData.months[mStr];
+                
+                const inc = getMonthTotalIncome(mStr);
+                const exp = (m.expenses || []).reduce((acc, curr) => acc + curr.value, 0);
+                
+                // Se o mês tem algum lançamento
+                if (inc > 0 || exp > 0) {
+                    if (inc > exp) {
+                        streak++;
+                    } else {
+                        break; // Sequência interrompida se fechou no vermelho
+                    }
+                }
+            }
+            return streak;
+        }
+
+        function updateStreakHeader() {
+            const streakCount = calculateStreak();
+            const countEl = document.getElementById('headerStreakCount');
+            const fireIcon = document.getElementById('streakFireIcon');
+            const badgeEl = document.getElementById('headerStreakBadge');
+
+            if (countEl) countEl.textContent = `${streakCount} mes${streakCount !== 1 ? 'es' : 'mês'}`;
+            
+            if (streakCount > 0) {
+                fireIcon.className = "text-base streak-fire-active";
+                badgeEl.className = "flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-orange-500/40 text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.3)] transition hover:scale-105 cursor-pointer shrink-0";
+            } else {
+                fireIcon.className = "text-base opacity-40 grayscale";
+                badgeEl.className = "flex items-center gap-2 px-3 py-2 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-muted transition opacity-70 shrink-0";
+            }
+        }
+
+        function renderBadgesView() {
+            const grid = document.getElementById('badgesGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const stats = calculateStats();
+            const currentStreak = calculateStreak();
+            const income = stats.income;
+            const exp = stats.total;
+            const rem = stats.remaining;
+
+            // Lógica das medalhas
+            const isMaoDeVaca = income > 0 && (exp / income) <= 0.5;
+            const isRegraDeOuro = income > 0 && (rem / income) >= 0.2;
+            
+            // Mestre do Orçamento: Tem ao menos 1 orçamento configurado e NENHUM estourado
+            let hasBudget = dbData.categoryBudgets && Object.keys(dbData.categoryBudgets).length > 0;
+            let budgetExceeded = false;
+            if (hasBudget) {
+                let spentByCategory = {};
+                (dbData.months[currentMonth].expenses || []).forEach(e => { spentByCategory[e.category] = (spentByCategory[e.category] || 0) + e.value; });
+                Object.keys(dbData.categoryBudgets).forEach(cat => {
+                    const limit = dbData.categoryBudgets[cat] || 0;
+                    if (limit > 0 && (spentByCategory[cat] || 0) > limit) budgetExceeded = true;
+                });
+            }
+            const isMestreOrcamento = hasBudget && !budgetExceeded;
+            
+            const isInquebravel = currentStreak >= 3;
+            const isPoupeiroProfissional = rem >= 1000;
+            const isVisaoDeFuturo = dbData.goals && dbData.goals.length >= 1;
+
+            const badges = [
+                {
+                    id: 'mao_de_vaca',
+                    title: 'Mão de Vaca 🧼',
+                    category: 'Economia Rígida',
+                    description: 'Gasteu 50% ou menos da sua renda mensal no mês atual.',
+                    unlocked: isMaoDeVaca,
+                    icon: '🧼',
+                    badgeColor: 'from-blue-600/30 to-cyan-500/30 border-cyan-500/50 text-cyan-400'
+                },
+                {
+                    id: 'regra_de_ouro',
+                    title: 'Regra de Ouro 📐',
+                    category: 'Poupança Inteligente',
+                    description: 'Siga o método 50/30/20 ou poupe mais de 20% da renda.',
+                    unlocked: isRegraDeOuro,
+                    icon: '📐',
+                    badgeColor: 'from-amber-500/30 to-yellow-500/30 border-amber-500/50 text-amber-400'
+                },
+                {
+                    id: 'mestre_orcamento',
+                    title: 'Mestre do Orçamento 🎯',
+                    category: 'Controle Total',
+                    description: 'Crie tetos de gastos e mantenha todas as categorias sob controle.',
+                    unlocked: isMestreOrcamento,
+                    icon: '🎯',
+                    badgeColor: 'from-emerald-500/30 to-teal-500/30 border-emerald-500/50 text-emerald-400'
+                },
+                {
+                    id: 'inquebravel',
+                    title: 'Inquebravel ⚡',
+                    category: 'Consistência',
+                    description: 'Mantenha uma sequência de 3 ou mais meses seguidos no azul!',
+                    unlocked: isInquebravel,
+                    icon: '⚡',
+                    badgeColor: 'from-purple-600/30 to-indigo-500/30 border-indigo-500/50 text-indigo-400'
+                },
+                {
+                    id: 'poupeiro_pro',
+                    title: 'Poupeiro Profissional 🐷',
+                    category: 'Reserva Acumulada',
+                    description: 'Consiga uma Sobra Livre de mais de R$ 1.000,00 no mês.',
+                    unlocked: isPoupeiroProfissional,
+                    icon: '🐷',
+                    badgeColor: 'from-pink-500/30 to-rose-500/30 border-rose-500/50 text-rose-400'
+                },
+                {
+                    id: 'visao_futuro',
+                    title: 'Visão de Futuro 🚀',
+                    category: 'Planejamento',
+                    description: 'Cadastre pelo menos 1 Meta ou Objetivo pessoal no painel.',
+                    unlocked: isVisaoDeFuturo,
+                    icon: '🚀',
+                    badgeColor: 'from-violet-600/30 to-fuchsia-500/30 border-fuchsia-500/50 text-fuchsia-400'
+                }
+            ];
+
+            const unlockedCount = badges.filter(b => b.unlocked).length;
+            document.getElementById('unlockedBadgesCount').textContent = `${unlockedCount}/${badges.length}`;
+
+            badges.forEach(b => {
+                const card = document.createElement('div');
+                const statusClass = b.unlocked ? 'unlocked' : 'locked';
+                const bgGradient = b.unlocked ? `bg-gradient-to-br ${b.badgeColor}` : 'bg-black/5 dark:bg-white/5';
+
+                card.className = `badge-card ${statusClass} glass-panel p-5 flex flex-col justify-between border relative overflow-hidden`;
+                card.innerHTML = `
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-12 h-12 rounded-2xl ${bgGradient} border flex items-center justify-center text-2xl shadow-lg shrink-0 badge-icon">
+                            ${b.icon}
+                        </div>
+                        <span class="text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-full ${b.unlocked ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-black/10 dark:bg-white/10 opacity-60'}">
+                            ${b.unlocked ? 'Desbloqueada' : 'Bloqueada'}
+                        </span>
+                    </div>
+
+                    <div>
+                        <span class="text-[10px] font-semibold opacity-60 block uppercase">${b.category}</span>
+                        <h3 class="text-sm font-bold mt-0.5 mb-1">${b.title}</h3>
+                        <p class="text-xs opacity-75 leading-relaxed">${b.description}</p>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-black/10 dark:border-white/10 flex items-center gap-1.5 text-[10px] opacity-70">
+                        <i class="fa-solid ${b.unlocked ? 'fa-circle-check text-emerald-400' : 'fa-lock text-slate-400'}"></i>
+                        <span>${b.unlocked ? 'Conquista ativada no seu perfil!' : 'Meta pendente de atingimento'}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
         }
 
         // --- ENHANCED AI NATURAL LANGUAGE PARSER & INSTALLMENTS ENGINE ---
@@ -1809,7 +2409,7 @@
             }
 
             const now = new Date();
-            const dateStr = now.toISOString().split('T')[0];
+            const dateStr = getLocalTodayDate();
             const timeStr = now.toTimeString().split(' ')[0].slice(0, 5);
 
             return {
@@ -1836,6 +2436,7 @@
             const totalVal = item.value;
             const installmentGroupId = numInstallments > 1 ? generateId() : null;
             const baseVal = Math.floor((totalVal / numInstallments) * 100) / 100;
+            let firstBucket = null;
 
             for (let i = 0; i < numInstallments; i++) {
                 let currentVal = baseVal;
@@ -1845,7 +2446,9 @@
                 }
 
                 const installmentDate = addMonthsToDateString(item.date, i);
-                const targetMonth = installmentDate.slice(0, 7);
+                const bucket = item.typeItem === 'expense' ? resolveExpenseBucketMonth(installmentDate, item.paymentMethod) : { targetMonth: installmentDate.slice(0, 7), invoiceMonth: null, dueDate: null, card: null };
+                if (i === 0) firstBucket = bucket;
+                const targetMonth = bucket.targetMonth;
                 ensureMonthExists(targetMonth);
 
                 const installmentDesc = numInstallments > 1 ? `${item.description} (${i + 1}/${numInstallments})` : item.description;
@@ -1862,6 +2465,8 @@
                     value: currentVal,
                     type: item.type,
                     recurrent: false,
+                    invoiceMonth: bucket.invoiceMonth,
+                    dueDate: bucket.dueDate,
                     createdAt: Date.now() + i
                 };
 
@@ -1872,8 +2477,7 @@
                 }
             }
 
-            const targetMonth = item.date.slice(0, 7);
-            currentMonth = targetMonth;
+            currentMonth = firstBucket ? firstBucket.targetMonth : item.date.slice(0, 7);
             currentMonthInput.value = currentMonth;
 
             saveDB();
@@ -1881,6 +2485,8 @@
 
             if (item.typeItem === 'gain') {
                 showNotification('gain', `IA: +${formatCurrency(totalVal)}`, `Ganho registrado em "${item.category}".`);
+            } else if (firstBucket && firstBucket.card && firstBucket.targetMonth !== item.date.slice(0, 7)) {
+                showNotification('expense', `IA: -${formatCurrency(totalVal)}`, `Cartão já fechado nesta data: lançado na fatura de ${formatInvoiceLabel(firstBucket.targetMonth)}.`);
             } else {
                 showNotification('expense', `IA: -${formatCurrency(totalVal)}`, numInstallments > 1 ? `Parcelado em ${numInstallments}x no ${item.paymentMethod}.` : `Despesa categorizada em "${item.category}".`);
             }
@@ -1895,6 +2501,8 @@
             if (!dbData.cards) dbData.cards = [];
             if (!dbData.goals) dbData.goals = [];
             if (!dbData.categoryBudgets) dbData.categoryBudgets = {};
+
+            migrateCardInvoiceMonths();
 
             timeInput.addEventListener('focus', () => { isTimeInputFocused = true; });
             timeInput.addEventListener('blur', () => { if(!timeInput.value) isTimeInputFocused = false; });
@@ -1917,6 +2525,7 @@
 
             currentMonthInput.addEventListener('change', (e) => {
                 currentMonth = e.target.value;
+                try { localStorage.setItem('findash_active_month', currentMonth); } catch (err) {}
                 setDefaultDateForCurrentMonth();
                 ensureMonthExists(currentMonth);
                 updateDashboard();
@@ -1932,17 +2541,18 @@
 
             subTabExtrato.addEventListener('click', () => {
                 activeSubTab = 'extrato';
-                subTabExtrato.className = "px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs transition";
-                subTabRaioX.className = "px-2.5 py-1 rounded-lg opacity-70 text-xs transition hover:opacity-100";
+                subTabExtrato.className = "px-2.5 py-1 rounded-lg bg-indigo-600 text-white transition";
+                subTabRaioX.className = "px-2.5 py-1 rounded-lg opacity-70 transition hover:opacity-100";
                 extratoView.classList.remove('hidden');
                 searchWrapper.style.display = 'flex';
                 raioXView.classList.add('hidden');
+                raioXView.style.display = 'none';
             });
 
             subTabRaioX.addEventListener('click', () => {
                 activeSubTab = 'raiox';
-                subTabRaioX.className = "px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs transition";
-                subTabExtrato.className = "px-2.5 py-1 rounded-lg opacity-70 text-xs transition hover:opacity-100";
+                subTabRaioX.className = "px-2.5 py-1 rounded-lg bg-indigo-600 text-white transition";
+                subTabExtrato.className = "px-2.5 py-1 rounded-lg opacity-70 transition hover:opacity-100";
                 extratoView.classList.add('hidden');
                 searchWrapper.style.display = 'none';
                 raioXView.classList.remove('hidden');
@@ -1963,6 +2573,58 @@
                 raioXTabGain.className = "px-3 py-1 rounded-xl bg-emerald-500 text-white text-[10px] transition shadow-sm";
                 raioXTabExpense.className = "px-3 py-1 rounded-xl opacity-70 text-[10px] transition hover:opacity-100";
                 renderRaioXView();
+            });
+
+            const nwTab6m = document.getElementById('nwTab6m');
+            const nwTab12m = document.getElementById('nwTab12m');
+
+            nwTab6m.addEventListener('click', () => {
+                netWorthSpan = 6;
+                nwTab6m.className = "px-3 py-1 rounded-lg bg-indigo-600 text-white text-[10px] transition shadow-sm";
+                nwTab12m.className = "px-3 py-1 rounded-lg opacity-70 text-[10px] transition hover:opacity-100";
+                updateNetWorthChart();
+            });
+
+            nwTab12m.addEventListener('click', () => {
+                netWorthSpan = 12;
+                nwTab12m.className = "px-3 py-1 rounded-lg bg-indigo-600 text-white text-[10px] transition shadow-sm";
+                nwTab6m.className = "px-3 py-1 rounded-lg opacity-70 text-[10px] transition hover:opacity-100";
+                updateNetWorthChart();
+            });
+
+            const projTab6m = document.getElementById('projTab6m');
+            const projTab12m = document.getElementById('projTab12m');
+            const projViewChartBtn = document.getElementById('projViewChart');
+            const projViewTableBtn = document.getElementById('projViewTable');
+            const projChartWrapper = document.getElementById('projectionChartWrapper');
+            const projTableWrapper = document.getElementById('projectionTableWrapper');
+            
+            projTab6m.addEventListener('click', () => {
+                projectionSpan = 6;
+                projTab6m.className = "px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-[10px] transition shadow-sm";
+                projTab12m.className = "px-3 py-1.5 rounded-lg opacity-70 text-[10px] transition hover:opacity-100";
+                updateProjectionChart();
+            });
+            
+            projTab12m.addEventListener('click', () => {
+                projectionSpan = 12;
+                projTab12m.className = "px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-[10px] transition shadow-sm";
+                projTab6m.className = "px-3 py-1.5 rounded-lg opacity-70 text-[10px] transition hover:opacity-100";
+                updateProjectionChart();
+            });
+
+            projViewChartBtn.addEventListener('click', () => {
+                projViewChartBtn.className = "px-2.5 py-1.5 rounded-lg bg-indigo-600 text-white text-[10px] transition shadow-sm";
+                projViewTableBtn.className = "px-2.5 py-1.5 rounded-lg opacity-70 text-[10px] transition hover:opacity-100";
+                projChartWrapper.classList.remove('hidden');
+                projTableWrapper.classList.add('hidden');
+            });
+
+            projViewTableBtn.addEventListener('click', () => {
+                projViewTableBtn.className = "px-2.5 py-1.5 rounded-lg bg-indigo-600 text-white text-[10px] transition shadow-sm";
+                projViewChartBtn.className = "px-2.5 py-1.5 rounded-lg opacity-70 text-[10px] transition hover:opacity-100";
+                projTableWrapper.classList.remove('hidden');
+                projChartWrapper.classList.add('hidden');
             });
 
             document.getElementById('prevMonthBtn').addEventListener('click', () => changeMonthOffset(-1));
@@ -2067,6 +2729,7 @@
             setupPaymentMethodsSelect();
             setupModals();
             setupGithubSync();
+            setupBlockDragDrop();
             
             Chart.defaults.color = htmlElement.classList.contains('dark') ? '#cbd5e1' : '#475569';
             Chart.defaults.font.family = "'Sora', sans-serif";
@@ -2075,47 +2738,276 @@
         }
 
         function setDefaultDateForCurrentMonth() {
-            const todayStr = new Date().toISOString().slice(0, 10);
+            const todayStr = getLocalTodayDate();
             dateInput.value = todayStr.startsWith(currentMonth) ? todayStr : `${currentMonth}-01`;
+        }
+
+        function getPreviousMonthKey(monthStr) {
+            const earlier = Object.keys(dbData.months).filter(k => k < monthStr).sort();
+            return earlier.length ? earlier[earlier.length - 1] : null;
+        }
+
+        function recurrenceKeysOf(exp) {
+            return [exp.recurrenceId || exp.id, `${exp.description}|${exp.category}`];
+        }
+
+        function isRecurrenceSkipped(monthObj, exp) {
+            const skipped = monthObj.skippedRecurrences || [];
+            return recurrenceKeysOf(exp).some(k => skipped.includes(k));
+        }
+
+        function markRecurrenceSkipped(monthObj, exp) {
+            if (!Array.isArray(monthObj.skippedRecurrences)) monthObj.skippedRecurrences = [];
+            recurrenceKeysOf(exp).forEach(k => { if (!monthObj.skippedRecurrences.includes(k)) monthObj.skippedRecurrences.push(k); });
+        }
+
+        // Encerra uma despesa fixa/assinatura: marca o mês como "não repetir" e remove das cópias dos meses seguintes
+        function stopRecurrence(monthStr, exp) {
+            const recId = exp.recurrenceId || exp.id;
+            if (dbData.months[monthStr]) markRecurrenceSkipped(dbData.months[monthStr], exp);
+            for (let mStr in dbData.months) {
+                if (mStr > monthStr) {
+                    dbData.months[mStr].expenses = (dbData.months[mStr].expenses || []).filter(e => !(
+                        e.id === exp.id ||
+                        e.recurrenceId === recId ||
+                        (e.recurrent && e.description === exp.description && e.category === exp.category)
+                    ));
+                }
+            }
         }
 
         function ensureMonthExists(monthStr) {
             if (!dbData.months[monthStr]) {
                 let defaultIncome = 5000, defaultAccountBalance = 2000, recurrentExpenses = [];
-                const sortedMonths = Object.keys(dbData.months).sort();
-                if (sortedMonths.length > 0) {
-                    const lastMonth = sortedMonths[sortedMonths.length - 1];
-                    defaultIncome = dbData.months[lastMonth].income || 5000;
-                    defaultAccountBalance = getMonthFinalAccountBalance(lastMonth);
-                    recurrentExpenses = (dbData.months[lastMonth].expenses || []).filter(exp => exp.recurrent).map(exp => ({ ...exp, id: generateId(), recurrenceId: exp.recurrenceId || exp.id, date: `${monthStr}-01`, createdAt: Date.now() }));
+                const prevKey = getPreviousMonthKey(monthStr);
+                if (prevKey) {
+                    const prev = dbData.months[prevKey];
+                    defaultIncome = prev.income || 5000;
+                    defaultAccountBalance = getMonthFinalAccountBalance(prevKey);
+                    recurrentExpenses = (prev.expenses || []).filter(exp => exp.recurrent).map(exp => ({ ...exp, id: generateId(), recurrenceId: exp.recurrenceId || exp.id, date: `${monthStr}-01`, createdAt: Date.now() }));
+                } else {
+                    // Mês anterior a todos os existentes: mantém a cadeia de saldo coerente
+                    const laterKeys = Object.keys(dbData.months).filter(k => k > monthStr).sort();
+                    if (laterKeys.length) defaultAccountBalance = getMonthOpeningBalance(laterKeys[0]);
                 }
-                dbData.months[monthStr] = { income: defaultIncome, accountBalance: defaultAccountBalance, expenses: recurrentExpenses, gains: [] };
+                dbData.months[monthStr] = { income: defaultIncome, accountBalance: defaultAccountBalance, expenses: recurrentExpenses, gains: [], skippedRecurrences: [] };
                 saveDB();
             } else {
-                if (dbData.months[monthStr].income === undefined) dbData.months[monthStr].income = 5000;
-                if (dbData.months[monthStr].accountBalance === undefined) dbData.months[monthStr].accountBalance = 2000;
-                if (!dbData.months[monthStr].gains) dbData.months[monthStr].gains = [];
-                
-                const sortedMonths = Object.keys(dbData.months).sort();
-                const idx = sortedMonths.indexOf(monthStr);
-                if (idx > 0) {
-                    const prevMonthStr = sortedMonths[idx - 1];
+                const m = dbData.months[monthStr];
+                if (m.income === undefined) m.income = 5000;
+                if (m.accountBalance === undefined) m.accountBalance = 2000;
+                if (!m.gains) m.gains = [];
+                if (!m.expenses) m.expenses = [];
+                if (!Array.isArray(m.skippedRecurrences)) m.skippedRecurrences = [];
+
+                const prevMonthStr = getPreviousMonthKey(monthStr);
+                if (prevMonthStr) {
                     const prevRecurrent = (dbData.months[prevMonthStr].expenses || []).filter(exp => exp.recurrent);
+                    let changed = false;
                     prevRecurrent.forEach(prevExp => {
                         const recId = prevExp.recurrenceId || prevExp.id;
-                        const exists = (dbData.months[monthStr].expenses || []).some(e => (e.recurrenceId === recId) || (e.recurrent && e.description === prevExp.description && e.category === prevExp.category));
-                        if (!exists) dbData.months[monthStr].expenses.push({ ...prevExp, id: generateId(), recurrenceId: recId, date: `${monthStr}-01`, createdAt: Date.now() });
+                        if (isRecurrenceSkipped(m, prevExp)) return;
+                        const exists = m.expenses.some(e => (e.recurrenceId === recId) || (e.recurrent && e.description === prevExp.description && e.category === prevExp.category));
+                        if (!exists) { m.expenses.push({ ...prevExp, id: generateId(), recurrenceId: recId, date: `${monthStr}-01`, createdAt: Date.now() }); changed = true; }
                     });
-                    saveDB();
+                    if (changed) saveDB();
                 }
             }
+        }
+
+        // Saldo de abertura do mês: o saldo final do mês anterior (a menos que o usuário tenha fixado manualmente)
+        function getMonthOpeningBalance(monthStr) {
+            const m = dbData.months[monthStr];
+            if (!m) return 0;
+            const own = m.accountBalance !== undefined ? m.accountBalance : 2000;
+            if (m.balanceManual) return own;
+            const prevKey = getPreviousMonthKey(monthStr);
+            if (!prevKey) return own;
+            return getMonthFinalAccountBalance(prevKey);
         }
 
         function getMonthFinalAccountBalance(monthStr) {
             const m = dbData.months[monthStr];
             if (!m) return 0;
-            const base = m.accountBalance !== undefined ? m.accountBalance : 2000;
+            const base = getMonthOpeningBalance(monthStr);
             return base + (m.gains || []).reduce((acc, curr) => acc + curr.value, 0) - (m.expenses || []).reduce((acc, curr) => acc + curr.value, 0);
+        }
+
+        function getAverageSavings() {
+            const sortedMonths = Object.keys(dbData.months).filter(m => m <= currentMonth).sort().reverse();
+            let totalSavings = 0;
+            let count = 0;
+            
+            for(let i = 0; i < Math.min(3, sortedMonths.length); i++) {
+                const mStr = sortedMonths[i];
+                const inc = getMonthTotalIncome(mStr);
+                const exp = (dbData.months[mStr].expenses || []).reduce((a, b) => a + b.value, 0);
+                totalSavings += (inc - exp);
+                count++;
+            }
+            
+            if (count === 0) {
+                const currentInc = getMonthTotalIncome(currentMonth);
+                const currentExp = (dbData.months[currentMonth].expenses || []).reduce((a, b) => a + b.value, 0);
+                return currentInc - currentExp;
+            }
+            return totalSavings / count;
+        }
+
+        function updateProjectionChart() {
+            const ctx = document.getElementById('projectionChart').getContext('2d');
+            const avgSavings = getAverageSavings();
+            const initialBalance = getMonthFinalAccountBalance(currentMonth);
+            let currentBalance = initialBalance;
+            
+            const subtitleEl = document.getElementById('projectionSubtitle');
+            if (avgSavings > 0) {
+                subtitleEl.innerHTML = `Média de economia: <span class="text-emerald-500 font-bold">+${formatCurrency(avgSavings)}</span>/mês.`;
+            } else if (avgSavings < 0) {
+                subtitleEl.innerHTML = `Média de déficit: <span class="text-rose-500 font-bold">${formatCurrency(avgSavings)}</span>/mês. Atenção!`;
+            } else {
+                subtitleEl.innerHTML = `Baseado na sua movimentação atual (estável).`;
+            }
+            
+            const labels = [];
+            const data = [];
+            
+            let [y, m] = currentMonth.split('-').map(Number);
+            
+            for(let i = 1; i <= projectionSpan; i++) {
+                let nextM = m + i;
+                let nextY = y;
+                while(nextM > 12) { nextM -= 12; nextY++; }
+                
+                const date = new Date(nextY, nextM - 1);
+                const label = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }).replace('.', '');
+                labels.push(label);
+                
+                currentBalance += avgSavings;
+                data.push(currentBalance);
+            }
+            
+            const tickColor = htmlElement.classList.contains('dark') ? '#cbd5e1' : '#475569';
+            const gridColor = htmlElement.classList.contains('dark') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+            const isPositive = avgSavings >= 0;
+            const lineColor = isPositive ? '#10b981' : '#f43f5e';
+            
+            if (projectionChartInstance) {
+                projectionChartInstance.data.labels = labels;
+                projectionChartInstance.data.datasets[0].data = data;
+                projectionChartInstance.data.datasets[0].borderColor = lineColor;
+                projectionChartInstance.data.datasets[0].pointBackgroundColor = lineColor;
+                projectionChartInstance.options.scales.x.ticks.color = tickColor;
+                projectionChartInstance.options.scales.y.ticks.color = tickColor;
+                projectionChartInstance.options.scales.y.grid.color = gridColor;
+                projectionChartInstance.update();
+            } else {
+                projectionChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Saldo Projetado',
+                            data: data,
+                            borderColor: lineColor,
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointBackgroundColor: lineColor,
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: false,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return formatCurrency(context.raw);
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: tickColor, font: { size: 10 } },
+                                grid: { display: false }
+                            },
+                            y: {
+                                ticks: { 
+                                    color: tickColor, 
+                                    font: { size: 10 },
+                                    callback: function(value) {
+                                        return new Intl.NumberFormat('pt-BR', { notation: "compact", compactDisplay: "short" }).format(value);
+                                    }
+                                },
+                                grid: { color: gridColor }
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index',
+                        },
+                    }
+                });
+            }
+
+            const tbody = document.getElementById('projectionTableBody');
+            tbody.innerHTML = '';
+            
+            for(let i = 0; i < labels.length; i++) {
+                let diff = data[i] - initialBalance;
+                let diffClass = diff >= 0 ? 'text-emerald-500' : 'text-rose-500';
+                let diffSign = diff >= 0 ? '+' : '';
+                
+                tbody.innerHTML += `
+                    <tr class="border-b border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/5 transition">
+                        <td class="py-2.5 px-2 capitalize font-medium text-[11px] opacity-80">${labels[i]}</td>
+                        <td class="py-2.5 px-2 text-right font-bold text-cyan-500 text-[11px]">${formatCurrency(data[i])}</td>
+                        <td class="py-2.5 px-2 text-right font-semibold text-[11px] ${diffClass}">${diffSign}${formatCurrency(diff)}</td>
+                    </tr>
+                `;
+            }
+        }
+
+        function getNetWorthHistory(monthsCount) {
+            const history = [];
+            let [currentYear, currentMonthNum] = currentMonth.split('-').map(Number);
+            let lastKnownBalance = 0;
+            const sortedAllMonths = Object.keys(dbData.months).sort();
+
+            const monthsToFetch = [];
+            for (let i = monthsCount - 1; i >= 0; i--) {
+                let m = currentMonthNum - i;
+                let y = currentYear;
+                while (m <= 0) {
+                    m += 12;
+                    y -= 1;
+                }
+                monthsToFetch.push(`${y}-${String(m).padStart(2, '0')}`);
+            }
+
+            monthsToFetch.forEach(mStr => {
+                if (dbData.months[mStr]) {
+                    lastKnownBalance = getMonthFinalAccountBalance(mStr);
+                } else {
+                    if (lastKnownBalance === 0) {
+                        const prevMonths = sortedAllMonths.filter(x => x < mStr);
+                        if (prevMonths.length > 0) {
+                            lastKnownBalance = getMonthFinalAccountBalance(prevMonths[prevMonths.length - 1]);
+                        }
+                    }
+                }
+                history.push({ month: mStr, balance: lastKnownBalance });
+            });
+
+            return history;
         }
 
         function changeMonthOffset(offset) {
@@ -2124,6 +3016,7 @@
             if (month > 12) { month = 1; year++; }
             else if (month < 1) { month = 12; year--; }
             currentMonth = `${year}-${String(month).padStart(2, '0')}`;
+            try { localStorage.setItem('findash_active_month', currentMonth); } catch (err) {}
             currentMonthInput.value = currentMonth;
             setDefaultDateForCurrentMonth();
             ensureMonthExists(currentMonth);
@@ -2139,11 +3032,23 @@
         }
 
         function editAccountBalance() {
-            const newval = prompt("Informe o saldo atual em conta:", dbData.months[currentMonth].accountBalance || 0);
-            if (newval !== null && !isNaN(parseFloat(newval))) {
-                dbData.months[currentMonth].accountBalance = parseFloat(newval);
+            const m = dbData.months[currentMonth];
+            const current = Math.round(getMonthFinalAccountBalance(currentMonth) * 100) / 100;
+            const raw = prompt("Informe o saldo atual em conta (ou digite 'auto' para voltar a seguir o saldo do mês anterior):", current);
+            if (raw === null) return;
+            if (raw.trim().toLowerCase() === 'auto') {
+                delete m.balanceManual;
                 saveDB(); updateDashboard();
+                return;
             }
+            const newval = parseFloat(raw.trim().replace(',', '.'));
+            if (isNaN(newval)) return;
+            const gainsSum = (m.gains || []).reduce((a, c) => a + c.value, 0);
+            const expSum = (m.expenses || []).reduce((a, c) => a + c.value, 0);
+            // guarda o saldo de abertura que faz o saldo atual ficar exatamente igual ao informado
+            m.accountBalance = Math.round((newval - gainsSum + expSum) * 100) / 100;
+            m.balanceManual = true;
+            saveDB(); updateDashboard();
         }
 
         function setupCategorySelect() {
@@ -2425,6 +3330,7 @@
             }
             saveDB();
             renderBudgetsView();
+            renderBadgesView();
         }
 
         function renderGoalsView() {
@@ -2510,6 +3416,102 @@
             return `${y}-${String(m).padStart(2, '0')}-${String(safeDay).padStart(2, '0')}`;
         }
 
+        /* ==================================================================
+           SISTEMA DE FATURA DE CARTÃO DE CRÉDITO (CICLO REAL BRASILEIRO)
+           ------------------------------------------------------------------
+           Regra: uma compra feita DEPOIS do dia de fechamento do cartão não
+           entra na fatura que está prestes a fechar — ela é automaticamente
+           jogada para a fatura do mês seguinte (que só vai vencer depois).
+           Isso significa que o valor só é descontado do saldo em conta no
+           mês em que a fatura efetivamente vence, e não na data da compra.
+        ================================================================== */
+        function getCardByPaymentMethod(paymentMethod) {
+            if (!paymentMethod || !paymentMethod.startsWith('Cartão: ')) return null;
+            const cardName = paymentMethod.replace('Cartão: ', '');
+            return (dbData.cards || []).find(c => c.name === cardName) || null;
+        }
+
+        function getCardInvoiceMonth(dateStr, card) {
+            let [year, month, day] = dateStr.split('-').map(Number);
+            month -= 1; // trabalha com mês 0-indexado
+
+            // Compra feita após o fechamento -> entra na fatura do ciclo seguinte
+            if (day > card.closingDay) {
+                month += 1;
+            }
+            // Se o vencimento configurado for "antes" do fechamento no calendário,
+            // significa que a fatura fechada neste mês só vence no mês seguinte
+            if (card.dueDay < card.closingDay) {
+                month += 1;
+            }
+
+            while (month > 11) { month -= 12; year += 1; }
+            while (month < 0) { month += 12; year -= 1; }
+
+            return `${year}-${String(month + 1).padStart(2, '0')}`;
+        }
+
+        function getCardInvoiceDueDateStr(dateStr, card) {
+            const invoiceMonth = getCardInvoiceMonth(dateStr, card);
+            const [y, m] = invoiceMonth.split('-').map(Number);
+            const maxDay = new Date(y, m, 0).getDate();
+            const safeDay = Math.min(card.dueDay, maxDay);
+            return `${invoiceMonth}-${String(safeDay).padStart(2, '0')}`;
+        }
+
+        function formatInvoiceLabel(monthStr) {
+            if (!monthStr) return '';
+            const [y, m] = monthStr.split('-').map(Number);
+            return new Date(y, m - 1).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }).replace('.', '');
+        }
+
+        // Recalcula, para uma despesa já existente, em qual fatura/mês ela deveria
+        // estar de acordo com o cartão usado — usado tanto ao criar quanto ao
+        // migrar lançamentos antigos que ficaram no mês errado.
+        function resolveExpenseBucketMonth(dateStr, paymentMethod) {
+            const card = getCardByPaymentMethod(paymentMethod);
+            if (!card) return { targetMonth: dateStr.slice(0, 7), invoiceMonth: null, dueDate: null, card: null };
+            const targetMonth = getCardInvoiceMonth(dateStr, card);
+            return { targetMonth, invoiceMonth: targetMonth, dueDate: getCardInvoiceDueDateStr(dateStr, card), card };
+        }
+
+        // Corrige automaticamente, uma única vez, lançamentos de cartão que foram
+        // salvos no mês errado antes desta correção existir (bug relatado pelo usuário).
+        function migrateCardInvoiceMonths() {
+            if (!dbData || dbData._invoiceMigrationV1 || !dbData.cards || dbData.cards.length === 0) {
+                if (dbData) dbData._invoiceMigrationV1 = true;
+                return;
+            }
+
+            let moved = 0;
+            Object.keys(dbData.months).slice().forEach(monthStr => {
+                const monthObj = dbData.months[monthStr];
+                if (!monthObj || !monthObj.expenses) return;
+
+                const staying = [];
+                monthObj.expenses.forEach(exp => {
+                    const card = getCardByPaymentMethod(exp.paymentMethod);
+                    if (!card || !exp.date) { staying.push(exp); return; }
+
+                    const correctMonth = getCardInvoiceMonth(exp.date, card);
+                    exp.invoiceMonth = correctMonth;
+                    exp.dueDate = getCardInvoiceDueDateStr(exp.date, card);
+
+                    if (correctMonth === monthStr) {
+                        staying.push(exp);
+                    } else {
+                        ensureMonthExists(correctMonth);
+                        dbData.months[correctMonth].expenses.push(exp);
+                        moved++;
+                    }
+                });
+                monthObj.expenses = staying;
+            });
+
+            dbData._invoiceMigrationV1 = true;
+            if (moved > 0) saveDB();
+        }
+
         function addExpense() {
             const desc = document.getElementById('descInput').value.trim();
             const cat = document.getElementById('categoryInput').value;
@@ -2524,6 +3526,7 @@
 
             const installmentGroupId = numInstallments > 1 ? generateId() : null;
             const baseVal = Math.floor((totalVal / numInstallments) * 100) / 100;
+            let firstBucket = null;
 
             for (let i = 0; i < numInstallments; i++) {
                 let currentVal = baseVal;
@@ -2533,7 +3536,9 @@
                 }
 
                 const installmentDate = addMonthsToDateString(baseDateVal, i);
-                const targetMonth = installmentDate.slice(0, 7);
+                const bucket = resolveExpenseBucketMonth(installmentDate, paymentMethod);
+                if (i === 0) firstBucket = bucket;
+                const targetMonth = bucket.targetMonth;
                 ensureMonthExists(targetMonth);
 
                 const installmentDesc = numInstallments > 1 ? `${desc} (${i + 1}/${numInstallments})` : desc;
@@ -2550,12 +3555,18 @@
                     value: currentVal,
                     type: dbData.categories[cat] || 'wants',
                     recurrent: recurrent && i === 0,
+                    invoiceMonth: bucket.invoiceMonth,
+                    dueDate: bucket.dueDate,
                     createdAt: Date.now() + i
                 });
             }
 
             saveDB();
-            showNotification('expense', `Despesa: -${formatCurrency(totalVal)}`, numInstallments > 1 ? `Parcelado em ${numInstallments}x com sucesso.` : "Despesa computada no painel.");
+            if (firstBucket && firstBucket.card && firstBucket.targetMonth !== currentMonth) {
+                showNotification('expense', `Despesa: -${formatCurrency(totalVal)}`, `Cartão já fechado nesta data: lançado na fatura de ${formatInvoiceLabel(firstBucket.targetMonth)} (vence dia ${firstBucket.card.dueDay}).`);
+            } else {
+                showNotification('expense', `Despesa: -${formatCurrency(totalVal)}`, numInstallments > 1 ? `Parcelado em ${numInstallments}x com sucesso.` : "Despesa computada no painel.");
+            }
             document.getElementById('descInput').value = '';
             document.getElementById('valInput').value = '';
             document.getElementById('installmentInput').value = '1';
@@ -2592,11 +3603,7 @@
                 if (typeItem === 'gain') dbData.months[foundMonth].gains = dbData.months[foundMonth].gains.filter(g => g.id !== id);
                 else {
                     dbData.months[foundMonth].expenses = dbData.months[foundMonth].expenses.filter(e => e.id !== id);
-                    if (targetItem.recurrent) {
-                        for (let mStr in dbData.months) {
-                            if (mStr > foundMonth) dbData.months[mStr].expenses = dbData.months[mStr].expenses.filter(e => !((targetItem.recurrenceId && e.recurrenceId === targetItem.recurrenceId) || (e.recurrent && e.description === targetItem.description && e.category === targetItem.category)));
-                        }
-                    }
+                    if (targetItem.recurrent) stopRecurrence(foundMonth, targetItem);
                 }
                 saveDB(); updateDashboard();
             }
@@ -2638,7 +3645,42 @@
         }
 
         function clearCurrentMonth() {
-            dbData.months[currentMonth].expenses = []; dbData.months[currentMonth].gains = []; saveDB(); updateDashboard();
+            const m = dbData.months[currentMonth];
+            if (!m) return;
+            // assinaturas/despesas fixas também saem (e não voltam a ser copiadas do mês anterior)
+            (m.expenses || []).filter(e => e.recurrent).forEach(e => stopRecurrence(currentMonth, e));
+            m.expenses = []; m.gains = [];
+            saveDB(); updateDashboard();
+        }
+
+        function formatDateLocal(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function getWeeklySpent() {
+            const today = new Date();
+            const currentDay = today.getDay();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - currentDay);
+            
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+            const startStr = formatDateLocal(startOfWeek);
+            const endStr = formatDateLocal(endOfWeek);
+
+            let total = 0;
+            for (let m in dbData.months) {
+                (dbData.months[m].expenses || []).forEach(e => {
+                    if (e.date >= startStr && e.date <= endStr) {
+                        total += e.value;
+                    }
+                });
+            }
+            return total;
         }
 
         function updateDashboard() {
@@ -2650,11 +3692,113 @@
             renderGoalsView();
             renderSubscriptionsView();
             renderBudgetsView();
+            updateStreakHeader();
+            renderBadgesView();
             if (activeSubTab === 'raiox') renderRaioXView();
             const stats = calculateStats();
             updateKPIs(stats); update503020(stats); updateDynamicStatus(stats);
             updateChart(stats.byCategory); 
             updateTimelineChart(dbData.months[currentMonth].expenses);
+            updateNetWorthChart();
+            updateCategoryComparisonChart();
+            updateProjectionChart();
+        }
+
+        function updateCategoryComparisonChart() {
+            const ctx = document.getElementById('categoryComparisonChart').getContext('2d');
+
+            let [y, m] = currentMonth.split('-').map(Number);
+            let prevM = m - 1;
+            let prevY = y;
+            if (prevM < 1) { prevM = 12; prevY -= 1; }
+            const prevMonthStr = `${prevY}-${String(prevM).padStart(2, '0')}`;
+
+            const currExpenses = (dbData.months[currentMonth] && dbData.months[currentMonth].expenses) || [];
+            const prevExpenses = (dbData.months[prevMonthStr] && dbData.months[prevMonthStr].expenses) || [];
+
+            const catTotalsCurr = {};
+            const catTotalsPrev = {};
+            const allCats = new Set();
+
+            currExpenses.forEach(e => {
+                catTotalsCurr[e.category] = (catTotalsCurr[e.category] || 0) + e.value;
+                allCats.add(e.category);
+            });
+
+            prevExpenses.forEach(e => {
+                catTotalsPrev[e.category] = (catTotalsPrev[e.category] || 0) + e.value;
+                allCats.add(e.category);
+            });
+
+            const labels = Array.from(allCats).sort();
+            const dataCurr = labels.map(c => catTotalsCurr[c] || 0);
+            const dataPrev = labels.map(c => catTotalsPrev[c] || 0);
+
+            const tickColor = htmlElement.classList.contains('dark') ? '#cbd5e1' : '#475569';
+            const gridColor = htmlElement.classList.contains('dark') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+
+            if (categoryComparisonChartInstance) {
+                categoryComparisonChartInstance.data.labels = labels;
+                categoryComparisonChartInstance.data.datasets[0].data = dataPrev;
+                categoryComparisonChartInstance.data.datasets[1].data = dataCurr;
+                categoryComparisonChartInstance.options.scales.x.ticks.color = tickColor;
+                categoryComparisonChartInstance.options.scales.y.ticks.color = tickColor;
+                categoryComparisonChartInstance.options.scales.y.grid.color = gridColor;
+                categoryComparisonChartInstance.options.plugins.legend.labels.color = tickColor;
+                categoryComparisonChartInstance.update();
+            } else {
+                categoryComparisonChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Mês Anterior',
+                                data: dataPrev,
+                                backgroundColor: 'rgba(156, 163, 175, 0.5)',
+                                borderColor: 'rgba(156, 163, 175, 1)',
+                                borderWidth: 1,
+                                borderRadius: 4
+                            },
+                            {
+                                label: 'Mês Atual',
+                                data: dataCurr,
+                                backgroundColor: '#f43f5e',
+                                borderColor: '#f43f5e',
+                                borderWidth: 1,
+                                borderRadius: 4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: { color: tickColor, font: { size: 11 }, usePointStyle: true, boxWidth: 6 }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + formatCurrency(context.raw);
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: tickColor, font: { size: 10 } },
+                                grid: { display: false }
+                            },
+                            y: {
+                                ticks: { color: tickColor, font: { size: 10 } },
+                                grid: { color: gridColor }
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         function getMonthTotalIncome(monthStr) {
@@ -2701,7 +3845,8 @@
                     sign = '- '; valColor = 'text-rose-500';
                     iconClass = item.type === 'wants' ? 'fa-martini-glass-citrus text-amber-500' : (item.type === 'savings' ? 'fa-credit-card text-emerald-500' : 'fa-house text-blue-500');
                     const payMethodDisplay = paymentIcons[item.paymentMethod] || `💳 ${item.paymentMethod || 'Pix'}`;
-                    subtitle = `${categoryIcons[item.category] || '📁'} ${item.category} • <span class="opacity-80">${payMethodDisplay}</span> • ${dateTimeStr}`;
+                    const invoiceBadge = (item.paymentMethod && item.paymentMethod.startsWith('Cartão: ') && item.invoiceMonth) ? ` • <span class="text-indigo-400" title="Mês em que a fatura fecha e é descontada da conta">Fatura ${formatInvoiceLabel(item.invoiceMonth)}</span>` : '';
+                    subtitle = `${categoryIcons[item.category] || '📁'} ${item.category} • <span class="opacity-80">${payMethodDisplay}</span>${invoiceBadge} • ${dateTimeStr}`;
                 }
 
                 li.innerHTML = `
@@ -2740,7 +3885,8 @@
                     const dateTimeStr = (item.date ? item.date.split('-').reverse().join('/') : '') + (item.time ? ` • 🕒 ${item.time.slice(0, 5)}` : '');
                     const iconClass = item.type === 'wants' ? 'fa-martini-glass-citrus text-amber-500' : (item.type === 'savings' ? 'fa-credit-card text-emerald-500' : 'fa-house text-blue-500');
                     const payMethodDisplay = paymentIcons[item.paymentMethod] || `💳 ${item.paymentMethod || 'Pix'}`;
-                    const subtitle = `${categoryIcons[item.category] || '📁'} ${item.category} • <span class="opacity-80">${payMethodDisplay}</span> • ${dateTimeStr}`;
+                    const invoiceBadge = (item.paymentMethod && item.paymentMethod.startsWith('Cartão: ') && item.invoiceMonth) ? ` • <span class="text-indigo-400" title="Mês em que a fatura fecha e é descontada da conta">Fatura ${formatInvoiceLabel(item.invoiceMonth)}</span>` : '';
+                    const subtitle = `${categoryIcons[item.category] || '📁'} ${item.category} • <span class="opacity-80">${payMethodDisplay}</span>${invoiceBadge} • ${dateTimeStr}`;
 
                     li.innerHTML = `
                         <div class="flex items-center gap-3 overflow-hidden">
@@ -2865,6 +4011,10 @@
             emptyMsg.style.display = 'none';
 
             const m = dbData.months[currentMonth];
+            const nextMonthStr = addMonthsToDateString(`${currentMonth}-01`, 1).slice(0, 7);
+            const nextMonthObj = dbData.months[nextMonthStr];
+
+            // Fatura que vence no mês exibido (já fechada, aguardando pagamento)
             let cardSpending = {};
             (m.expenses || []).forEach(e => {
                 if (e.paymentMethod && e.paymentMethod.startsWith('Cartão: ')) {
@@ -2873,10 +4023,37 @@
                 }
             });
 
+            // Próxima fatura, ainda em aberto (acumulando até o próximo fechamento)
+            let nextCardSpending = {};
+            if (nextMonthObj) {
+                (nextMonthObj.expenses || []).forEach(e => {
+                    if (e.paymentMethod && e.paymentMethod.startsWith('Cartão: ')) {
+                        const cardName = e.paymentMethod.replace('Cartão: ', '');
+                        nextCardSpending[cardName] = (nextCardSpending[cardName] || 0) + e.value;
+                    }
+                });
+            }
+
+            // Limite comprometido: soma de todas as faturas atuais e futuras ainda não pagas
+            // (mês exibido em diante) — inclui parcelas futuras já assumidas no limite.
+            let cardCommitted = {};
+            Object.keys(dbData.months).forEach(mStr => {
+                if (mStr < currentMonth) return;
+                (dbData.months[mStr].expenses || []).forEach(e => {
+                    if (e.paymentMethod && e.paymentMethod.startsWith('Cartão: ')) {
+                        const cardName = e.paymentMethod.replace('Cartão: ', '');
+                        cardCommitted[cardName] = (cardCommitted[cardName] || 0) + e.value;
+                    }
+                });
+            });
+
             dbData.cards.forEach(card => {
                 const spent = cardSpending[card.name] || 0;
-                const available = card.limit - spent;
-                const pct = card.limit > 0 ? Math.min((spent / card.limit) * 100, 100) : 0;
+                const nextSpent = nextCardSpending[card.name] || 0;
+                const committed = cardCommitted[card.name] || 0;
+                const available = Math.max(card.limit - committed, 0);
+                const pct = card.limit > 0 ? Math.min((committed / card.limit) * 100, 100) : 0;
+                const dueDateLabel = String(card.dueDay).padStart(2, '0') + '/' + String(parseInt(currentMonth.split('-')[1])).padStart(2, '0');
 
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'card-item glass-panel p-5 flex flex-col justify-between relative overflow-hidden group';
@@ -2894,14 +4071,18 @@
                         </div>
                         <div class="space-y-2.5 mb-4">
                             <div class="flex justify-between text-xs">
-                                <span class="opacity-70">Fatura Atual:</span>
+                                <span class="opacity-70">Fatura deste mês <span class="opacity-60">(vence ${dueDateLabel})</span>:</span>
                                 <span class="font-bold text-rose-500">${formatCurrency(spent)}</span>
                             </div>
                             <div class="flex justify-between text-xs">
-                                <span class="opacity-70">Disponível:</span>
+                                <span class="opacity-70">Próxima fatura <span class="opacity-60">(em aberto)</span>:</span>
+                                <span class="font-bold text-amber-500">${formatCurrency(nextSpent)}</span>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span class="opacity-70">Limite disponível:</span>
                                 <span class="font-bold text-emerald-500">${formatCurrency(available)}</span>
                             </div>
-                            <div class="w-full bg-black/10 dark:bg-white/10 rounded-full h-1.5 mt-1">
+                            <div class="w-full bg-black/10 dark:bg-white/10 rounded-full h-1.5 mt-1" title="${formatCurrency(committed)} comprometidos de ${formatCurrency(card.limit)}">
                                 <div class="bg-indigo-500 h-1.5 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
                             </div>
                         </div>
@@ -2999,7 +4180,7 @@
                                     </div>
                                     <span class="font-semibold text-xs">${data.label}</span>
                                 </div>
-                                <span class="text-[10px] font-medium opacity-70">${data.count} itens</span>
+                                <span class="text-[10px] font-medium opacity-70">${data.count} items</span>
                             </div>
                             <div>
                                 <div class="flex justify-between items-baseline mb-1">
@@ -3022,6 +4203,12 @@
             totalExpensesDisplay.textContent = formatCurrency(stats.total);
             remainingBalanceDisplay.textContent = formatCurrency(stats.remaining);
             expensePercentDisplay.textContent = `${stats.income > 0 ? ((stats.total / stats.income) * 100).toFixed(1) : 0}%`;
+            
+            const weeklySpent = getWeeklySpent();
+            if (weeklySpentDisplay) {
+                weeklySpentDisplay.textContent = formatCurrency(weeklySpent);
+            }
+            
             savingsPercentDisplay.textContent = `${stats.income > 0 ? ((stats.remaining / stats.income) * 100).toFixed(1) : 0}%`;
         }
 
@@ -3082,6 +4269,89 @@
             }
         }
 
+        function updateNetWorthChart() {
+            const ctx = document.getElementById('netWorthChart').getContext('2d');
+            const historyData = getNetWorthHistory(netWorthSpan);
+            
+            const labels = historyData.map(d => {
+                const [y, m] = d.month.split('-');
+                const date = new Date(y, m - 1);
+                return date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }).replace('.', '');
+            });
+            const data = historyData.map(d => d.balance);
+
+            const tickColor = htmlElement.classList.contains('dark') ? '#cbd5e1' : '#475569';
+            const gridColor = htmlElement.classList.contains('dark') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+
+            if (netWorthChartInstance) {
+                netWorthChartInstance.data.labels = labels;
+                netWorthChartInstance.data.datasets[0].data = data;
+                netWorthChartInstance.options.scales.x.ticks.color = tickColor;
+                netWorthChartInstance.options.scales.y.ticks.color = tickColor;
+                netWorthChartInstance.options.scales.y.grid.color = gridColor;
+                netWorthChartInstance.update();
+            } else {
+                let gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)');
+                gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+
+                netWorthChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Saldo Final',
+                            data: data,
+                            borderColor: '#6366f1',
+                            backgroundColor: gradient,
+                            borderWidth: 2,
+                            pointBackgroundColor: '#22d3ee',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return formatCurrency(context.raw);
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: tickColor, font: { size: 10 } },
+                                grid: { display: false }
+                            },
+                            y: {
+                                ticks: { 
+                                    color: tickColor, 
+                                    font: { size: 10 },
+                                    callback: function(value) {
+                                        return new Intl.NumberFormat('pt-BR', { notation: "compact", compactDisplay: "short" }).format(value);
+                                    }
+                                },
+                                grid: { color: gridColor }
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index',
+                        },
+                    }
+                });
+            }
+        }
+
         function renderHistoryTable() {
             const tbody = document.getElementById('historyTableBody'); tbody.innerHTML = '';
             const sortedMonths = Object.keys(dbData.months).filter(m => m <= new Date().toISOString().slice(0, 7) && ((dbData.months[m].expenses||[]).length>0 || (dbData.months[m].gains||[]).length>0)).sort().reverse();
@@ -3097,9 +4367,6 @@
             const fileName = `findash_backup_${currentMonth}.json`;
             const blob = new Blob([JSON.stringify(dbData, null, 2)], { type: 'application/json' });
 
-            // No iOS, quando o site é adicionado à Tela de Início (modo "standalone"), não existe
-            // interface do Safari para processar downloads — por isso usamos a folha de
-            // compartilhamento nativa (Web Share API), que permite "Salvar em Arquivos".
             try {
                 const file = new File([blob], fileName, { type: 'application/json' });
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -3107,11 +4374,9 @@
                     return;
                 }
             } catch (err) {
-                if (err && err.name === 'AbortError') return; // usuário cancelou o compartilhamento
-                // qualquer outro erro cai no fallback abaixo
+                if (err && err.name === 'AbortError') return;
             }
 
-            // Fallback para navegadores comuns (Safari em aba normal, Chrome, etc.)
             const url = URL.createObjectURL(blob);
             const dl = document.createElement('a');
             dl.href = url;
@@ -3125,11 +4390,98 @@
         function importData(e) {
             const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(event) { try { const parsed = JSON.parse(event.target.result); if (parsed.categories && parsed.months) { dbData = parsed; if(!dbData.cards) dbData.cards = []; if(!dbData.goals) dbData.goals = []; if(!dbData.categoryBudgets) dbData.categoryBudgets = {}; saveDB(); setupCategorySelect(); setupPaymentMethodsSelect(); setDefaultDateForCurrentMonth(); ensureMonthExists(currentMonth); updateDashboard(); } } catch(err) { } };
+            reader.onload = function(event) {
+                try {
+                    const parsed = JSON.parse(event.target.result);
+                    if (parsed.categories && parsed.months) {
+                        mergeDataIntoDB(parsed);
+                        saveDB();
+                        setupCategorySelect();
+                        setupPaymentMethodsSelect();
+                        setDefaultDateForCurrentMonth();
+                        ensureMonthExists(currentMonth);
+                        updateDashboard();
+                        if (typeof showNotification === 'function') {
+                            showNotification('gain', 'Importado com sucesso', 'Seus dados foram unificados com o armazenamento local.');
+                        }
+                    }
+                } catch(err) {
+                    console.error('Erro na importação:', err);
+                }
+            };
             reader.readAsText(file);
         }
 
-        // --- SINCRONIZAÇÃO COM GITHUB (armazena o backup como um arquivo JSON num repositório) ---
+
+        function mergeDataIntoDB(incoming) {
+            if (!incoming || typeof incoming !== 'object') return;
+            if (incoming.categories) {
+                dbData.categories = Object.assign({}, dbData.categories || {}, incoming.categories);
+            }
+            if (Array.isArray(incoming.cards)) {
+                if (!dbData.cards) dbData.cards = [];
+                incoming.cards.forEach(card => {
+                    const exists = dbData.cards.some(c => c.id === card.id || (c.name === card.name && c.brand === card.brand));
+                    if (!exists) dbData.cards.push(card);
+                });
+            }
+            if (Array.isArray(incoming.goals)) {
+                if (!dbData.goals) dbData.goals = [];
+                incoming.goals.forEach(goal => {
+                    const exists = dbData.goals.some(g => g.id === goal.id || g.title === goal.title);
+                    if (!exists) dbData.goals.push(goal);
+                });
+            }
+            if (incoming.categoryBudgets) {
+                dbData.categoryBudgets = Object.assign({}, dbData.categoryBudgets || {}, incoming.categoryBudgets);
+            }
+            if (incoming.months && typeof incoming.months === 'object') {
+                if (!dbData.months) dbData.months = {};
+                for (const mKey of Object.keys(incoming.months)) {
+                    const incMonth = incoming.months[mKey];
+                    if (!dbData.months[mKey]) {
+                        dbData.months[mKey] = JSON.parse(JSON.stringify(incMonth));
+                    } else {
+                        const localMonth = dbData.months[mKey];
+                        if ((!localMonth.income || localMonth.income === 5000) && incMonth.income) {
+                            localMonth.income = incMonth.income;
+                        }
+                        if ((!localMonth.accountBalance || localMonth.accountBalance === 2000) && incMonth.accountBalance) {
+                            localMonth.accountBalance = incMonth.accountBalance;
+                        }
+                        if (Array.isArray(incMonth.skippedRecurrences)) {
+                            if (!Array.isArray(localMonth.skippedRecurrences)) localMonth.skippedRecurrences = [];
+                            incMonth.skippedRecurrences.forEach(k => { if (!localMonth.skippedRecurrences.includes(k)) localMonth.skippedRecurrences.push(k); });
+                        }
+                        if (incMonth.balanceManual && !localMonth.balanceManual && localMonth.accountBalance === incMonth.accountBalance) {
+                            localMonth.balanceManual = true;
+                        }
+                        if (Array.isArray(incMonth.expenses)) {
+                            if (!localMonth.expenses) localMonth.expenses = [];
+                            incMonth.expenses.forEach(incExp => {
+                                if (incExp.recurrent && isRecurrenceSkipped(localMonth, incExp)) return;
+                                const exists = localMonth.expenses.some(e => 
+                                    (incExp.id && e.id === incExp.id) ||
+                                    (e.description === incExp.description && String(e.value) === String(incExp.value) && e.date === incExp.date)
+                                );
+                                if (!exists) localMonth.expenses.push(incExp);
+                            });
+                        }
+                        if (Array.isArray(incMonth.gains)) {
+                            if (!localMonth.gains) localMonth.gains = [];
+                            incMonth.gains.forEach(incGain => {
+                                const exists = localMonth.gains.some(g => 
+                                    (incGain.id && g.id === incGain.id) ||
+                                    (g.description === incGain.description && String(g.value) === String(incGain.value) && g.date === incGain.date)
+                                );
+                                if (!exists) localMonth.gains.push(incGain);
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
         function getGithubConfig() {
             return JSON.parse(localStorage.getItem('findash_github_config')) || {};
         }
@@ -3142,7 +4494,6 @@
             el.textContent = msg;
             el.className = 'text-xs mt-3 ' + (isError ? 'text-rose-500' : 'text-emerald-500');
         }
-        // Codifica/decodifica em Base64 preservando acentos e caracteres especiais (UTF-8)
         function b64EncodeUnicode(str) {
             return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode('0x' + p1)));
         }
@@ -3194,8 +4545,7 @@
         async function pullFromGithub() {
             const cfg = getGithubConfig();
             if (!cfg.token || !cfg.owner || !cfg.repo || !cfg.path) { setGithubStatus('Preencha e salve as configurações antes de sincronizar.', true); return; }
-            if (!confirm('Isso vai substituir os dados atuais deste perfil pelos dados salvos no GitHub. Deseja continuar?')) return;
-            setGithubStatus('Baixando do GitHub...');
+            setGithubStatus('Baixando dados e unificando com o armazenamento local...');
             try {
                 const headers = { 'Authorization': `Bearer ${cfg.token}`, 'Accept': 'application/vnd.github+json' };
                 const getRes = await fetch(`${githubApiUrl(cfg)}?ref=${encodeURIComponent(cfg.branch || 'main')}`, { headers });
@@ -3206,15 +4556,20 @@
                 const fileJson = await getRes.json();
                 const parsed = JSON.parse(b64DecodeUnicode(fileJson.content.replace(/\n/g, '')));
                 if (!parsed.categories || !parsed.months) throw new Error('Arquivo inválido: não parece um backup do FinDash.');
-                dbData = parsed;
-                if (!dbData.cards) dbData.cards = [];
-                if (!dbData.goals) dbData.goals = [];
-                if (!dbData.categoryBudgets) dbData.categoryBudgets = {};
+                
+                mergeDataIntoDB(parsed);
                 saveDB();
-                setupCategorySelect(); setupPaymentMethodsSelect(); setDefaultDateForCurrentMonth(); ensureMonthExists(currentMonth); updateDashboard();
+                setupCategorySelect();
+                setupPaymentMethodsSelect();
+                setDefaultDateForCurrentMonth();
+                ensureMonthExists(currentMonth);
+                updateDashboard();
                 cfg.lastSync = new Date().toLocaleString('pt-BR');
                 saveGithubConfig(cfg);
-                setGithubStatus(`Dados baixados com sucesso em ${cfg.lastSync}.`);
+                setGithubStatus(`Dados integrados e salvos localmente com sucesso em ${cfg.lastSync}.`);
+                if (typeof showNotification === 'function') {
+                    showNotification('gain', 'Sincronizado!', 'Lançamentos do GitHub unificados com o armazenamento local.');
+                }
             } catch (err) {
                 setGithubStatus(`Falha ao baixar: ${err.message}`, true);
             }
@@ -3279,16 +4634,302 @@
                 for (let mStr in dbData.months) { const arr = typeItem === 'gain' ? (dbData.months[mStr].gains || []) : (dbData.months[mStr].expenses || []); const idx = arr.findIndex(i => i.id === id); if (idx !== -1) { itemFound = arr.splice(idx, 1)[0]; break; } }
                 if (itemFound && desc && cat && !isNaN(val)) {
                     itemFound.description = desc; itemFound.category = cat; itemFound.date = dateVal; itemFound.time = document.getElementById('editTimeInput').value; itemFound.value = val;
-                    if (typeItem === 'expense') { itemFound.paymentMethod = document.getElementById('editPaymentMethodInput').value; itemFound.type = dbData.categories[cat] || 'wants'; itemFound.recurrent = document.getElementById('editRecurrentCheck').checked; }
-                    const m = dateVal.slice(0, 7); ensureMonthExists(m);
+                    let m = dateVal.slice(0, 7);
+                    if (typeItem === 'expense') {
+                        const editedPaymentMethod = document.getElementById('editPaymentMethodInput').value;
+                        itemFound.paymentMethod = editedPaymentMethod;
+                        itemFound.type = dbData.categories[cat] || 'wants';
+                        itemFound.recurrent = document.getElementById('editRecurrentCheck').checked;
+                        const bucket = resolveExpenseBucketMonth(dateVal, editedPaymentMethod);
+                        m = bucket.targetMonth;
+                        itemFound.invoiceMonth = bucket.invoiceMonth;
+                        itemFound.dueDate = bucket.dueDate;
+                    }
+                    ensureMonthExists(m);
                     typeItem === 'gain' ? dbData.months[m].gains.push(itemFound) : dbData.months[m].expenses.push(itemFound);
-                    saveDB(); editModal.classList.add('hidden'); updateDashboard();
+                    saveDB(); editModal.classList.add('hidden');
+                    if (typeItem === 'expense' && m !== currentMonth) { currentMonth = m; currentMonthInput.value = currentMonth; }
+                    updateDashboard();
                 }
             });
 
             const infoModal = document.getElementById('infoModal');
             document.getElementById('infoBtn').addEventListener('click', () => { infoModal.classList.remove('hidden'); setTimeout(() => infoModal.classList.remove('opacity-0'), 10); });
             document.getElementById('closeInfoBtn').addEventListener('click', () => { infoModal.classList.add('opacity-0'); setTimeout(() => infoModal.classList.add('hidden'), 300); });
+        }
+
+        /* ==================================================================
+           MECÂNICA DE ARRASTAR E SOLTAR (DRAG & DROP) DOS BLOCOS DO PAINEL
+           ------------------------------------------------------------------
+           - Funciona com mouse e toque (Pointer Events), sem bibliotecas externas.
+           - Cada "zona" (data-dragzone) contém "blocos" (.drag-block) que podem
+             ser reordenados livremente através de um "handle" (.drag-handle).
+           - A ordem escolhida pelo usuário é salva no localStorage e restaurada
+             automaticamente na próxima visita, por zona.
+           - Só é possível arrastar quando o "Modo de Personalização" está ativo
+             (botão "Personalizar Layout" no menu de ações do cabeçalho), para
+             não atrapalhar o uso normal do dashboard (scroll, cliques, etc).
+        ================================================================== */
+        const BlockDragDrop = (() => {
+            const STORAGE_PREFIX = 'findash_layout_';
+            let zones = [];          // { el, storageKey, axis }
+            let dragEl = null;       // elemento real sendo arrastado
+            let originZone = null;   // zona de origem/atual do arraste
+            let placeholder = null;  // marcador do local onde o bloco vai cair
+            let pointerOffsetX = 0;
+            let pointerOffsetY = 0;
+            let originalStyles = null;
+            let activePointerId = null;
+
+            function query(zoneEl) {
+                return Array.from(zoneEl.querySelectorAll(':scope > .drag-block'));
+            }
+
+            function registerZone(zoneEl, { storageKey, axis = 'y' } = {}) {
+                if (!zoneEl || zoneEl.dataset.dragInit === '1') return;
+                zoneEl.dataset.dragInit = '1';
+                zones.push({ el: zoneEl, storageKey, axis });
+
+                if (storageKey) restoreOrder(zoneEl, storageKey);
+
+                query(zoneEl).forEach(block => bindHandle(block, zoneEl));
+            }
+
+            function bindHandle(block, zoneEl) {
+                const handle = block.querySelector(':scope > .drag-handle');
+                if (!handle || handle.dataset.dragBound === '1') return;
+                handle.dataset.dragBound = '1';
+                handle.addEventListener('pointerdown', (e) => startDrag(e, block, zoneEl));
+            }
+
+            function isEditModeOn() {
+                return document.body.classList.contains('edit-mode');
+            }
+
+            function startDrag(e, block, zoneEl) {
+                if (!isEditModeOn()) return;
+                if (e.button !== undefined && e.button !== 0 && e.pointerType === 'mouse') return;
+                e.preventDefault();
+
+                dragEl = block;
+                originZone = zoneEl;
+                activePointerId = e.pointerId;
+
+                const rect = block.getBoundingClientRect();
+                pointerOffsetX = e.clientX - rect.left;
+                pointerOffsetY = e.clientY - rect.top;
+
+                placeholder = document.createElement('div');
+                placeholder.className = 'drag-placeholder';
+                placeholder.style.width = rect.width + 'px';
+                placeholder.style.height = rect.height + 'px';
+                block.parentNode.insertBefore(placeholder, block.nextSibling);
+
+                originalStyles = {
+                    position: block.style.position,
+                    top: block.style.top,
+                    left: block.style.left,
+                    width: block.style.width,
+                    margin: block.style.margin,
+                    zIndex: block.style.zIndex,
+                };
+
+                block.classList.add('dragging');
+                block.style.position = 'fixed';
+                block.style.top = rect.top + 'px';
+                block.style.left = rect.left + 'px';
+                block.style.width = rect.width + 'px';
+                block.style.margin = '0';
+                block.style.zIndex = '9999';
+                document.body.appendChild(block);
+                document.body.classList.add('dragging-active');
+
+                try { handleForBlock(block).setPointerCapture(activePointerId); } catch (err) {}
+
+                document.addEventListener('pointermove', onDragMove);
+                document.addEventListener('pointerup', endDrag);
+                document.addEventListener('pointercancel', endDrag);
+            }
+
+            function handleForBlock(block) {
+                return block.querySelector(':scope > .drag-handle');
+            }
+
+            function onDragMove(e) {
+                if (!dragEl) return;
+                if (activePointerId !== null && e.pointerId !== activePointerId) return;
+
+                dragEl.style.top = (e.clientY - pointerOffsetY) + 'px';
+                dragEl.style.left = (e.clientX - pointerOffsetX) + 'px';
+
+                const zoneInfo = zones.find(z => z.el === originZone);
+                if (!zoneInfo) return;
+
+                const siblings = query(originZone).filter(b => b !== dragEl);
+                let closest = null;
+                let closestDist = Infinity;
+
+                siblings.forEach(sib => {
+                    const r = sib.getBoundingClientRect();
+                    const cx = r.left + r.width / 2;
+                    const cy = r.top + r.height / 2;
+                    const dist = Math.pow(cx - e.clientX, 2) + Math.pow(cy - e.clientY, 2);
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        closest = { el: sib, cx, cy };
+                    }
+                });
+
+                if (!closest) return;
+
+                const before = zoneInfo.axis === 'x' ? (e.clientX < closest.cx) : (e.clientY < closest.cy);
+                if (before) {
+                    originZone.insertBefore(placeholder, closest.el);
+                } else {
+                    originZone.insertBefore(placeholder, closest.el.nextSibling);
+                }
+            }
+
+            function endDrag(e) {
+                if (!dragEl) return;
+                if (activePointerId !== null && e.pointerId !== undefined && e.pointerId !== activePointerId) return;
+
+                document.removeEventListener('pointermove', onDragMove);
+                document.removeEventListener('pointerup', endDrag);
+                document.removeEventListener('pointercancel', endDrag);
+                document.body.classList.remove('dragging-active');
+
+                dragEl.style.position = originalStyles.position;
+                dragEl.style.top = originalStyles.top;
+                dragEl.style.left = originalStyles.left;
+                dragEl.style.width = originalStyles.width;
+                dragEl.style.margin = originalStyles.margin;
+                dragEl.style.zIndex = originalStyles.zIndex;
+                dragEl.classList.remove('dragging');
+
+                originZone.insertBefore(dragEl, placeholder);
+                placeholder.remove();
+
+                saveOrder(originZone);
+                window.dispatchEvent(new Event('resize'));
+
+                dragEl = null;
+                originZone = null;
+                placeholder = null;
+                activePointerId = null;
+            }
+
+            function saveOrder(zoneEl) {
+                const zoneInfo = zones.find(z => z.el === zoneEl);
+                if (!zoneInfo || !zoneInfo.storageKey) return;
+                const order = query(zoneEl).map(b => b.dataset.blockId);
+                try { localStorage.setItem(STORAGE_PREFIX + zoneInfo.storageKey, JSON.stringify(order)); } catch (err) {}
+            }
+
+            function restoreOrder(zoneEl, storageKey) {
+                let saved;
+                try { saved = JSON.parse(localStorage.getItem(STORAGE_PREFIX + storageKey) || 'null'); } catch (err) { saved = null; }
+                if (!Array.isArray(saved) || !saved.length) return;
+
+                const blocks = query(zoneEl);
+                const map = {};
+                blocks.forEach(b => { map[b.dataset.blockId] = b; });
+
+                saved.forEach(id => { if (map[id]) zoneEl.appendChild(map[id]); });
+                blocks.forEach(b => { if (!saved.includes(b.dataset.blockId)) zoneEl.appendChild(b); });
+            }
+
+            function resetAll() {
+                zones.forEach(z => {
+                    if (z.storageKey) { try { localStorage.removeItem(STORAGE_PREFIX + z.storageKey); } catch (err) {} }
+                });
+                location.reload();
+            }
+
+            function setEditMode(enabled) {
+                document.body.classList.toggle('edit-mode', enabled);
+                const bar = document.getElementById('editModeBar');
+                if (bar) {
+                    if (enabled) {
+                        bar.style.display = "flex";
+                        requestAnimationFrame(() => bar.classList.add("visible"));
+                    } else {
+                        bar.classList.remove("visible");
+                        setTimeout(() => { if (!isEditModeOn()) bar.style.display = "none"; }, 300);
+                    }
+                }
+            }
+
+            function toggleEditMode() {
+                setEditMode(!isEditModeOn());
+            }
+
+            return { registerZone, resetAll, setEditMode, toggleEditMode };
+        })();
+
+        function setupBlockDragDrop() {
+            // Bloco principal do painel (seções inteiras, empilhadas verticalmente)
+            const painelZone = document.getElementById('view-painel');
+            if (painelZone) BlockDragDrop.registerZone(painelZone, { storageKey: 'painel-blocks', axis: 'y' });
+
+            // Grade dos 4 cartões de indicadores (Saldo, Renda, Gastos, Sobra)
+            const statsZone = document.getElementById('statsGrid');
+            if (statsZone) BlockDragDrop.registerZone(statsZone, { storageKey: 'stats-blocks', axis: 'x' });
+
+            const customizeBtn = document.getElementById('customizeLayoutBtn');
+            const finishBtn = document.getElementById('finishEditModeBtn');
+            const resetBtn = document.getElementById('resetLayoutBtn');
+            const actionsGroup = document.getElementById('actionsGroup');
+
+            if (customizeBtn) {
+                customizeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (actionsGroup) actionsGroup.classList.remove('open');
+                    
+                    // Se não estiver no painel, abre a aba do painel primeiro
+                    const painelTab = document.querySelector('.nav-item[data-target="view-painel"]');
+                    if (painelTab && !painelTab.classList.contains('active')) {
+                        painelTab.click();
+                    }
+                    
+                    BlockDragDrop.toggleEditMode();
+                });
+            }
+            const closeBtn = document.getElementById('closeEditModeBarBtn');
+            if (finishBtn) {
+                finishBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    BlockDragDrop.setEditMode(false);
+                });
+            }
+            if (closeBtn) {
+                closeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    BlockDragDrop.setEditMode(false);
+                });
+            }
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    if (confirm('Isso vai restaurar a ordem padrão de todos os blocos do painel. Deseja continuar?')) {
+                        BlockDragDrop.resetAll();
+                    }
+                });
+            }
+            // Fechar ao pressionar a tecla Escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && document.body.classList.contains('edit-mode')) {
+                    BlockDragDrop.setEditMode(false);
+                }
+            });
+            // Fechar ao navegar para outra aba diferente do painel
+            document.querySelectorAll('.nav-item').forEach(nav => {
+                nav.addEventListener('click', function() {
+                    const target = this.getAttribute('data-target');
+                    if (target && target !== 'view-painel' && document.body.classList.contains('edit-mode')) {
+                        BlockDragDrop.setEditMode(false);
+                    }
+                });
+            });
         }
 
         window.addEventListener('DOMContentLoaded', init);
