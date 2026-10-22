@@ -162,6 +162,22 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Seletor de mês compacto no celular */
+        @media (max-width: 1023px) {
+            #currentMonthInput {
+                -webkit-appearance: none; appearance: none;
+                width: 7.6rem !important; min-width: 0; height: 1.75rem; line-height: 1.75rem;
+                padding: 0 !important; margin: 0; overflow: hidden;
+                text-align: center !important; text-align-last: center;
+            }
+            #currentMonthInput::-webkit-calendar-picker-indicator { display: none; }
+            #currentMonthInput::-webkit-date-and-time-value { text-align: center; min-height: 0; }
+            #prevMonthBtn, #nextMonthBtn {
+                width: 1.75rem; height: 1.75rem; padding: 0 !important;
+                display: flex; align-items: center; justify-content: center;
+            }
+        }
+
         @media (max-width: 1024px) {
             .sidebar {
                 width: 100%; 
@@ -813,7 +829,7 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-1 bg-black/5 dark:bg-white/5 backdrop-blur-md p-1.5 rounded-2xl border border-black/10 dark:border-white/10 shadow-sm flex-1 lg:flex-none min-w-0">
+                        <div class="flex items-center gap-0.5 lg:gap-1 bg-black/5 dark:bg-white/5 backdrop-blur-md p-1 lg:p-1.5 rounded-2xl border border-black/10 dark:border-white/10 shadow-sm flex-none min-w-0">
                             <button id="prevMonthBtn" class="p-1.5 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl transition shrink-0"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
                             <input type="month" id="currentMonthInput" class="bg-transparent font-semibold text-xs lg:text-sm outline-none px-1 cursor-pointer [color-scheme:dark] w-full lg:w-auto min-w-0 text-center lg:text-left">
                             <button id="nextMonthBtn" class="p-1.5 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl transition shrink-0"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
@@ -4545,7 +4561,7 @@
         async function pullFromGithub() {
             const cfg = getGithubConfig();
             if (!cfg.token || !cfg.owner || !cfg.repo || !cfg.path) { setGithubStatus('Preencha e salve as configurações antes de sincronizar.', true); return; }
-            setGithubStatus('Baixando dados e unificando com o armazenamento local...');
+            setGithubStatus('Baixando dados e substituindo o armazenamento local...');
             try {
                 const headers = { 'Authorization': `Bearer ${cfg.token}`, 'Accept': 'application/vnd.github+json' };
                 const getRes = await fetch(`${githubApiUrl(cfg)}?ref=${encodeURIComponent(cfg.branch || 'main')}`, { headers });
@@ -4557,7 +4573,13 @@
                 const parsed = JSON.parse(b64DecodeUnicode(fileJson.content.replace(/\n/g, '')));
                 if (!parsed.categories || !parsed.months) throw new Error('Arquivo inválido: não parece um backup do FinDash.');
                 
-                mergeDataIntoDB(parsed);
+                // Substitui (não soma) os dados locais pelos do GitHub
+                ['categories', 'months', 'cards', 'goals', 'categoryBudgets'].forEach(k => {
+                    if (parsed[k] !== undefined) dbData[k] = JSON.parse(JSON.stringify(parsed[k]));
+                });
+                if (!dbData.cards) dbData.cards = [];
+                if (!dbData.goals) dbData.goals = [];
+                if (!dbData.categoryBudgets) dbData.categoryBudgets = {};
                 saveDB();
                 setupCategorySelect();
                 setupPaymentMethodsSelect();
@@ -4566,9 +4588,9 @@
                 updateDashboard();
                 cfg.lastSync = new Date().toLocaleString('pt-BR');
                 saveGithubConfig(cfg);
-                setGithubStatus(`Dados integrados e salvos localmente com sucesso em ${cfg.lastSync}.`);
+                setGithubStatus(`Dados do GitHub substituíram os locais com sucesso em ${cfg.lastSync}.`);
                 if (typeof showNotification === 'function') {
-                    showNotification('gain', 'Sincronizado!', 'Lançamentos do GitHub unificados com o armazenamento local.');
+                    showNotification('gain', 'Sincronizado!', 'Lançamentos locais substituídos pelos do GitHub.');
                 }
             } catch (err) {
                 setGithubStatus(`Falha ao baixar: ${err.message}`, true);
