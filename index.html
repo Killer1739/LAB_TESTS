@@ -936,6 +936,22 @@
                     </div>
                 </section>
 
+                <section class="grid grid-cols-1 lg:grid-cols-3 gap-5 drag-block" data-block-id="insights">
+                    <div class="drag-handle" title="Arraste para reordenar este bloco"><i class="fa-solid fa-grip-vertical"></i></div>
+                    <div class="glass-panel p-4 lg:p-5 flex flex-col gap-3">
+                        <h3 class="text-base font-bold flex items-center gap-2">Projeção do Mês <i class="fa-solid fa-gauge-high text-indigo-400 text-sm"></i></h3>
+                        <div id="monthProjectionBody" class="text-xs space-y-2"></div>
+                    </div>
+                    <div class="glass-panel p-4 lg:p-5 flex flex-col gap-3">
+                        <h3 class="text-base font-bold flex items-center gap-2">Vencimentos <span class="text-[10px] font-medium opacity-60">próximos 7 dias</span> <i class="fa-solid fa-calendar-day text-amber-400 text-sm"></i></h3>
+                        <div id="upcomingDuesBody" class="text-xs space-y-2"></div>
+                    </div>
+                    <div class="glass-panel p-4 lg:p-5 flex flex-col gap-3">
+                        <h3 class="text-base font-bold flex items-center gap-2">Alertas de Orçamento <i class="fa-solid fa-bell text-rose-400 text-sm"></i></h3>
+                        <div id="budgetAlertsBody" class="text-xs space-y-3"></div>
+                    </div>
+                </section>
+
                 <section class="grid grid-cols-1 gap-5 drag-block" data-block-id="timeline-transactions">
                     <div class="drag-handle" title="Arraste para reordenar este bloco"><i class="fa-solid fa-grip-vertical"></i></div>
                     <div class="glass-panel p-4 lg:p-5 flex flex-col">
@@ -953,6 +969,21 @@
                         <div class="flex items-center gap-2 mb-3 bg-black/5 dark:bg-white/5 px-3 py-2 rounded-xl border border-black/10 dark:border-white/10 text-xs" id="searchWrapper">
                             <i class="fa-solid fa-magnifying-glass opacity-50"></i>
                             <input type="text" id="searchInput" placeholder="Buscar lançamento..." class="w-full bg-transparent outline-none">
+                            <button type="button" id="filterToggleBtn" class="relative shrink-0 w-7 h-7 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 transition flex items-center justify-center" title="Filtros"><i class="fa-solid fa-sliders text-[11px]"></i><span id="filterBadge" style="display:none" class="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold items-center justify-center">0</span></button>
+                        </div>
+
+                        <div id="filtersPanel" style="display:none" class="grid grid-cols-2 gap-2 mb-3 text-xs">
+                            <select id="filterType" class="w-full px-2.5 py-2 bg-white dark:bg-[#1e293b] border border-black/10 dark:border-white/10 rounded-xl text-xs">
+                                <option value="all">Todos os tipos</option>
+                                <option value="expense">Só despesas</option>
+                                <option value="gain">Só ganhos</option>
+                            </select>
+                            <select id="filterCategory" class="w-full px-2.5 py-2 bg-white dark:bg-[#1e293b] border border-black/10 dark:border-white/10 rounded-xl text-xs"></select>
+                            <select id="filterPayment" class="w-full px-2.5 py-2 bg-white dark:bg-[#1e293b] border border-black/10 dark:border-white/10 rounded-xl text-xs"></select>
+                            <button type="button" id="filterClearBtn" class="px-2.5 py-2 rounded-xl bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 font-semibold transition">Limpar filtros</button>
+                            <label class="flex items-center gap-2"><span class="opacity-70 shrink-0">De</span><input type="date" id="filterFrom" class="w-full min-w-0 px-2 py-1.5 bg-white dark:bg-[#1e293b] border border-black/10 dark:border-white/10 rounded-xl text-xs dark:[color-scheme:dark]"></label>
+                            <label class="flex items-center gap-2"><span class="opacity-70 shrink-0">Até</span><input type="date" id="filterTo" class="w-full min-w-0 px-2 py-1.5 bg-white dark:bg-[#1e293b] border border-black/10 dark:border-white/10 rounded-xl text-xs dark:[color-scheme:dark]"></label>
+                            <p id="filtersSummary" class="col-span-2 text-[11px] opacity-70"></p>
                         </div>
 
                         <div id="extratoView" class="overflow-y-auto pr-1" style="max-height: 200px;">
@@ -1359,6 +1390,7 @@
                 <button id="ghPushBtn" class="py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-xs shadow-lg transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-cloud-arrow-up"></i> Enviar agora</button>
                 <button id="ghPullBtn" class="py-3 bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-cloud-arrow-down"></i> Baixar agora</button>
             </div>
+            <button type="button" id="ghRestoreBtn" style="display:none" class="w-full mt-2 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 rounded-2xl font-bold text-xs transition items-center justify-center gap-1.5"><i class="fa-solid fa-rotate-left"></i> Restaurar cópia de antes do último download</button>
 
             <p id="githubSyncStatus" class="text-xs mt-3 opacity-70"></p>
         </div>
@@ -2550,6 +2582,11 @@
             });
 
             searchInput.addEventListener('input', () => renderTransactionsList());
+            document.getElementById('filterToggleBtn').addEventListener('click', () => { filtersOpen = !filtersOpen; applyFiltersPanelVisibility(); });
+            [['filterType', 'type'], ['filterCategory', 'category'], ['filterPayment', 'payment'], ['filterFrom', 'from'], ['filterTo', 'to']].forEach(([id, key]) => {
+                document.getElementById(id).addEventListener('change', (e) => { extratoFilters[key] = e.target.value; renderTransactionsList(); });
+            });
+            document.getElementById('filterClearBtn').addEventListener('click', () => { const mo = extratoFilters.month; resetExtratoFilters(); extratoFilters.month = mo; syncFilterInputs(); renderTransactionsList(); });
 
             const subTabExtrato = document.getElementById('subTabExtrato');
             const subTabRaioX = document.getElementById('subTabRaioX');
@@ -2563,6 +2600,7 @@
                 subTabRaioX.className = "px-2.5 py-1 rounded-lg opacity-70 transition hover:opacity-100";
                 extratoView.classList.remove('hidden');
                 searchWrapper.style.display = 'flex';
+                applyFiltersPanelVisibility();
                 raioXView.classList.add('hidden');
                 raioXView.style.display = 'none';
             });
@@ -2573,6 +2611,7 @@
                 subTabExtrato.className = "px-2.5 py-1 rounded-lg opacity-70 transition hover:opacity-100";
                 extratoView.classList.add('hidden');
                 searchWrapper.style.display = 'none';
+                applyFiltersPanelVisibility();
                 raioXView.classList.remove('hidden');
                 raioXView.style.display = 'flex';
                 renderRaioXView();
@@ -2760,6 +2799,13 @@
             dateInput.value = todayStr.startsWith(currentMonth) ? todayStr : `${currentMonth}-01`;
         }
 
+        function dateInMonthKeepingDay(prevDate, monthStr) {
+            const [y, mo] = monthStr.split('-').map(Number);
+            const day = parseInt((prevDate || '').split('-')[2], 10) || 1;
+            const maxDay = new Date(y, mo, 0).getDate();
+            return `${monthStr}-${String(Math.min(day, maxDay)).padStart(2, '0')}`;
+        }
+
         function getPreviousMonthKey(monthStr) {
             const earlier = Object.keys(dbData.months).filter(k => k < monthStr).sort();
             return earlier.length ? earlier[earlier.length - 1] : null;
@@ -2802,7 +2848,7 @@
                     const prev = dbData.months[prevKey];
                     defaultIncome = prev.income || 5000;
                     defaultAccountBalance = getMonthFinalAccountBalance(prevKey);
-                    recurrentExpenses = (prev.expenses || []).filter(exp => exp.recurrent).map(exp => ({ ...exp, id: generateId(), recurrenceId: exp.recurrenceId || exp.id, date: `${monthStr}-01`, createdAt: Date.now() }));
+                    recurrentExpenses = (prev.expenses || []).filter(exp => exp.recurrent).map(exp => ({ ...exp, id: generateId(), recurrenceId: exp.recurrenceId || exp.id, date: dateInMonthKeepingDay(exp.date, monthStr), createdAt: Date.now() }));
                 } else {
                     // Mês anterior a todos os existentes: mantém a cadeia de saldo coerente
                     const laterKeys = Object.keys(dbData.months).filter(k => k > monthStr).sort();
@@ -2826,7 +2872,7 @@
                         const recId = prevExp.recurrenceId || prevExp.id;
                         if (isRecurrenceSkipped(m, prevExp)) return;
                         const exists = m.expenses.some(e => (e.recurrenceId === recId) || (e.recurrent && e.description === prevExp.description && e.category === prevExp.category));
-                        if (!exists) { m.expenses.push({ ...prevExp, id: generateId(), recurrenceId: recId, date: `${monthStr}-01`, createdAt: Date.now() }); changed = true; }
+                        if (!exists) { m.expenses.push({ ...prevExp, id: generateId(), recurrenceId: recId, date: dateInMonthKeepingDay(prevExp.date, monthStr), createdAt: Date.now() }); changed = true; }
                     });
                     if (changed) saveDB();
                 }
@@ -3701,6 +3747,176 @@
             return total;
         }
 
+        /* ---------- Filtros do extrato ---------- */
+        let filtersOpen = false;
+        const extratoFilters = { month: null, type: 'all', category: '', payment: '', from: '', to: '' };
+
+        function fdEsc(str) { return String(str == null ? '' : str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+        function applyFiltersPanelVisibility() {
+            const panel = document.getElementById('filtersPanel');
+            if (panel) panel.style.display = (filtersOpen && activeSubTab === 'extrato') ? 'grid' : 'none';
+        }
+
+        function resetExtratoFilters() {
+            extratoFilters.type = 'all'; extratoFilters.category = ''; extratoFilters.payment = ''; extratoFilters.from = ''; extratoFilters.to = '';
+        }
+
+        function syncFilterInputs() {
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+            set('filterType', extratoFilters.type); set('filterFrom', extratoFilters.from); set('filterTo', extratoFilters.to);
+        }
+
+        function fillFilterSelect(id, values, current, allLabel) {
+            const sel = document.getElementById(id);
+            if (!sel) return '';
+            sel.innerHTML = `<option value="">${allLabel}</option>` + values.map(v => `<option value="${fdEsc(v)}">${fdEsc(v)}</option>`).join('');
+            sel.value = values.includes(current) ? current : '';
+            return sel.value;
+        }
+
+        function populateFilterOptions(allItems) {
+            const cats = [...new Set(allItems.map(i => i.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            const pays = [...new Set(allItems.map(i => i.paymentMethod).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            extratoFilters.category = fillFilterSelect('filterCategory', cats, extratoFilters.category, 'Todas as categorias');
+            extratoFilters.payment = fillFilterSelect('filterPayment', pays, extratoFilters.payment, 'Todas as formas de pagamento');
+        }
+
+        function updateFiltersSummary(filtered, totalCount) {
+            const f = extratoFilters;
+            const active = (f.type !== 'all' ? 1 : 0) + (f.category ? 1 : 0) + (f.payment ? 1 : 0) + (f.from ? 1 : 0) + (f.to ? 1 : 0);
+            const badge = document.getElementById('filterBadge');
+            if (badge) { badge.textContent = active; badge.style.display = active > 0 ? 'flex' : 'none'; }
+            const el = document.getElementById('filtersSummary');
+            if (!el) return;
+            const exp = filtered.filter(i => i.typeItem === 'expense').reduce((a, i) => a + i.value, 0);
+            const gain = filtered.filter(i => i.typeItem === 'gain').reduce((a, i) => a + i.value, 0);
+            el.textContent = `${filtered.length} de ${totalCount} lançamentos • Despesas ${formatCurrency(exp)} • Ganhos ${formatCurrency(gain)}`;
+        }
+
+        /* ---------- Projeção do mês, vencimentos e alertas de orçamento ---------- */
+        function insPad(n) { return String(n).padStart(2, '0'); }
+        function insDateKey(d) { return `${d.getFullYear()}-${insPad(d.getMonth() + 1)}-${insPad(d.getDate())}`; }
+        function insIsCard(e) { return !!(e.paymentMethod && e.paymentMethod.startsWith('Cartão: ')); }
+
+        function renderMonthProjection() {
+            const body = document.getElementById('monthProjectionBody');
+            if (!body) return;
+            const m = dbData.months[currentMonth];
+            const expenses = m.expenses || [];
+            const income = getMonthTotalIncome(currentMonth);
+            const total = expenses.reduce((a, e) => a + e.value, 0);
+            const [y, mo] = currentMonth.split('-').map(Number);
+            const daysInMonth = new Date(y, mo, 0).getDate();
+            const now = new Date();
+            const nowKey = `${now.getFullYear()}-${insPad(now.getMonth() + 1)}`;
+            const row = (label, value, cls = '') => `<div class="flex justify-between gap-2"><span class="opacity-70">${label}</span><span class="font-bold ${cls}">${value}</span></div>`;
+            const hint = (t) => `<p class="text-[10px] opacity-60 pt-1">${t}</p>`;
+            const signCls = v => v >= 0 ? 'text-emerald-500' : 'text-rose-500';
+
+            if (currentMonth < nowKey) {
+                body.innerHTML = row('Mês encerrado • gastos', formatCurrency(total), 'text-rose-500') + row('Renda do mês', formatCurrency(income)) + row('Sobra do mês', formatCurrency(income - total), signCls(income - total));
+                return;
+            }
+            const committed = expenses.filter(e => e.recurrent || insIsCard(e)).reduce((a, e) => a + e.value, 0);
+            const variable = total - committed;
+            if (currentMonth > nowKey) {
+                body.innerHTML = row('Já comprometido (fixas e faturas)', formatCurrency(committed), 'text-rose-500') + row('Renda do mês', formatCurrency(income)) + row('Sobra se nada mais for gasto', formatCurrency(income - committed), signCls(income - committed)) + hint('Mês ainda não começou: só aparece o que já está lançado.');
+                return;
+            }
+            const day = now.getDate();
+            const daysLeft = daysInMonth - day + 1;
+            const projectedTotal = committed + (variable / day) * daysInMonth;
+            let html = row('Gasto até agora', formatCurrency(total), 'text-rose-500') + row('Gasto previsto no mês', formatCurrency(projectedTotal), income > 0 && projectedTotal > income ? 'text-rose-500' : '');
+            if (income > 0) {
+                const projectedLeft = income - projectedTotal;
+                const leftNow = income - total;
+                html += row('Sobra prevista', formatCurrency(projectedLeft), signCls(projectedLeft));
+                html += leftNow > 0 ? row('Pode gastar por dia', formatCurrency(leftNow / daysLeft), 'text-indigo-400') : row('Situação', 'Renda já comprometida', 'text-rose-500');
+            }
+            html += hint('Estimativa: fixas e faturas de cartão contam inteiras; os demais gastos seguem o ritmo diário até hoje.');
+            body.innerHTML = html;
+        }
+
+        function getUpcomingDues(days = 7) {
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const todayKey = insDateKey(today);
+            const endD = new Date(today); endD.setDate(endD.getDate() + days);
+            const endKey = insDateKey(endD);
+            const dues = [];
+            const invoices = {};
+            Object.keys(dbData.months).forEach(mStr => {
+                (dbData.months[mStr].expenses || []).forEach(e => {
+                    if (insIsCard(e) && e.dueDate && e.dueDate >= todayKey && e.dueDate <= endKey) {
+                        const k = e.paymentMethod + '|' + e.dueDate;
+                        if (!invoices[k]) invoices[k] = { kind: 'fatura', name: 'Fatura ' + e.paymentMethod.replace('Cartão: ', ''), date: e.dueDate, value: 0 };
+                        invoices[k].value += e.value;
+                    } else if (!insIsCard(e) && !e.recurrent && e.date && e.date > todayKey && e.date <= endKey) {
+                        dues.push({ kind: 'agendado', name: e.description, date: e.date, value: e.value });
+                    }
+                });
+            });
+            Object.values(invoices).forEach(i => dues.push(i));
+            const base = dbData.months[todayKey.slice(0, 7)];
+            if (base) {
+                (base.expenses || []).filter(e => e.recurrent && !insIsCard(e)).forEach(e => {
+                    const day = parseInt((e.date || '').split('-')[2], 10) || 1;
+                    for (let i = 0; i <= days; i++) {
+                        const d = new Date(today); d.setDate(today.getDate() + i);
+                        const dim = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+                        if (d.getDate() === Math.min(day, dim)) dues.push({ kind: 'fixa', name: e.description, date: insDateKey(d), value: e.value });
+                    }
+                });
+            }
+            return dues.sort((a, b) => a.date.localeCompare(b.date) || b.value - a.value);
+        }
+
+        function renderUpcomingDues() {
+            const body = document.getElementById('upcomingDuesBody');
+            if (!body) return;
+            const dues = getUpcomingDues(7);
+            if (dues.length === 0) { body.innerHTML = '<p class="opacity-60 py-2">Nenhum vencimento nos próximos 7 dias 🎉</p>'; return; }
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const total = dues.reduce((a, d) => a + d.value, 0);
+            const icons = { fatura: 'fa-credit-card text-indigo-400', fixa: 'fa-file-invoice-dollar text-amber-400', agendado: 'fa-calendar-day text-sky-400' };
+            const rel = (key) => {
+                const [y, mo, d] = key.split('-').map(Number);
+                const diff = Math.round((new Date(y, mo - 1, d) - today) / 86400000);
+                const label = `${insPad(d)}/${insPad(mo)}`;
+                return diff === 0 ? 'hoje' : (diff === 1 ? 'amanhã' : `${label} • em ${diff} dias`);
+            };
+            const shown = dues.slice(0, 6);
+            body.innerHTML = `<div class="flex justify-between"><span class="opacity-70">Total a vencer</span><span class="font-bold text-rose-500">${formatCurrency(total)}</span></div>` +
+                shown.map(d => `<div class="flex justify-between items-center gap-2"><span class="flex items-center gap-2 min-w-0"><i class="fa-solid ${icons[d.kind]} text-[11px] w-4 text-center"></i><span class="min-w-0"><span class="block truncate font-semibold">${fdEsc(d.name)}</span><span class="block text-[10px] opacity-60">${rel(d.date)}</span></span></span><span class="font-bold shrink-0">${formatCurrency(d.value)}</span></div>`).join('') +
+                (dues.length > shown.length ? `<p class="text-[10px] opacity-60">+ ${dues.length - shown.length} outros no período</p>` : '');
+        }
+
+        function renderBudgetAlerts() {
+            const body = document.getElementById('budgetAlertsBody');
+            if (!body) return;
+            const budgets = Object.entries(dbData.categoryBudgets || {}).filter(([, v]) => v > 0);
+            if (budgets.length === 0) { body.innerHTML = '<p class="opacity-60 py-2">Nenhum limite definido. Configure na aba Orçamentos para receber alertas.</p>'; return; }
+            const spentBy = {};
+            (dbData.months[currentMonth].expenses || []).forEach(e => { spentBy[e.category] = (spentBy[e.category] || 0) + e.value; });
+            const items = budgets.map(([cat, limit]) => ({ cat, limit, spent: spentBy[cat] || 0, pct: ((spentBy[cat] || 0) / limit) * 100 })).sort((a, b) => b.pct - a.pct);
+            const alerts = items.filter(i => i.pct >= 80);
+            if (alerts.length === 0) {
+                const top = items[0];
+                body.innerHTML = `<p class="py-1">Tudo dentro dos limites ✅</p><p class="text-[10px] opacity-60">Maior uso: ${fdEsc(top.cat)} com ${top.pct.toFixed(0)}% do limite.</p>`;
+                return;
+            }
+            body.innerHTML = alerts.slice(0, 5).map(a => {
+                const over = a.spent > a.limit;
+                const cls = over ? 'text-rose-500' : 'text-amber-500';
+                const bar = over ? 'bg-rose-500' : 'bg-amber-500';
+                return `<div><div class="flex justify-between gap-2"><span class="truncate font-semibold">${categoryIcons[a.cat] || '📁'} ${fdEsc(a.cat)}</span><span class="font-bold ${cls}">${a.pct.toFixed(0)}%</span></div><div class="h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden mt-1"><div class="h-full ${bar}" style="width:${Math.min(a.pct, 100)}%"></div></div><p class="opacity-60 text-[10px] mt-0.5">${formatCurrency(a.spent)} de ${formatCurrency(a.limit)} • ${over ? 'estourou em ' + formatCurrency(a.spent - a.limit) : 'restam ' + formatCurrency(a.limit - a.spent)}</p></div>`;
+            }).join('') + (alerts.length > 5 ? `<p class="text-[10px] opacity-60">+ ${alerts.length - 5} outras categorias em alerta</p>` : '');
+        }
+
+        function renderInsights() {
+            [renderMonthProjection, renderUpcomingDues, renderBudgetAlerts].forEach(fn => { try { fn(); } catch (err) { console.error(fn.name, err); } });
+        }
+
         function updateMonthLabel() {
             const lbl = document.getElementById('currentMonthLabel');
             if (!lbl || !currentMonth) return;
@@ -3728,6 +3944,7 @@
             updateNetWorthChart();
             updateCategoryComparisonChart();
             updateProjectionChart();
+            renderInsights();
         }
 
         function updateCategoryComparisonChart() {
@@ -3851,8 +4068,20 @@
         function renderTransactionsList() {
             const m = dbData.months[currentMonth];
             const allItems = [...(m.expenses || []).map(e => ({...e, typeItem: 'expense', createdAt: e.createdAt || 0})), ...(m.gains || []).map(g => ({...g, typeItem: 'gain', createdAt: g.createdAt || 0}))].sort((a, b) => b.createdAt - a.createdAt);
+            if (extratoFilters.month !== currentMonth) { resetExtratoFilters(); extratoFilters.month = currentMonth; syncFilterInputs(); }
+            populateFilterOptions(allItems);
             const query = searchInput.value.toLowerCase().trim();
-            const filtered = allItems.filter(i => !query || [i.description, i.category, i.paymentMethod, String(i.value)].some(v => (v||'').toLowerCase().includes(query)));
+            const f = extratoFilters;
+            const filtered = allItems.filter(i => {
+                if (query && ![i.description, i.category, i.paymentMethod, String(i.value)].some(v => (v||'').toLowerCase().includes(query))) return false;
+                if (f.type !== 'all' && i.typeItem !== f.type) return false;
+                if (f.category && i.category !== f.category) return false;
+                if (f.payment && (i.paymentMethod || '') !== f.payment) return false;
+                if (f.from && (!i.date || i.date < f.from)) return false;
+                if (f.to && (!i.date || i.date > f.to)) return false;
+                return true;
+            });
+            updateFiltersSummary(filtered, allItems.length);
             
             document.getElementById('totalItemsCount').textContent = `${filtered.length} item${filtered.length !== 1 ? 's' : ''}`;
             expensesList.querySelectorAll('.expense-item').forEach(el => el.remove());
@@ -4581,6 +4810,42 @@
             }
         }
 
+        function getPrePullBackupKey() { return getProfileDbKey(currentProfileId) + '_prepull_backup'; }
+
+        function saveLocalBackupBeforePull() {
+            try {
+                localStorage.setItem(getPrePullBackupKey(), JSON.stringify({ savedAt: new Date().toLocaleString('pt-BR'), data: dbData }));
+                return true;
+            } catch (err) { return false; }
+        }
+
+        function refreshRestoreBtn() {
+            const btn = document.getElementById('ghRestoreBtn');
+            if (!btn) return;
+            let has = false;
+            try { const b = JSON.parse(localStorage.getItem(getPrePullBackupKey()) || 'null'); has = !!(b && b.data); if (has) btn.title = 'Cópia guardada em ' + b.savedAt; } catch (err) {}
+            btn.style.display = has ? 'flex' : 'none';
+        }
+
+        function restorePrePullBackup() {
+            let b = null;
+            try { b = JSON.parse(localStorage.getItem(getPrePullBackupKey()) || 'null'); } catch (err) {}
+            if (!b || !b.data) { setGithubStatus('Não há cópia de segurança guardada.', true); return; }
+            if (!confirm(`Restaurar a cópia de segurança de ${b.savedAt}?\n\nOs dados atuais deste aparelho serão substituídos (e guardados como nova cópia, para você poder desfazer).`)) return;
+            const current = JSON.parse(JSON.stringify(dbData));
+            Object.keys(dbData).forEach(k => delete dbData[k]);
+            Object.assign(dbData, b.data);
+            try { localStorage.setItem(getPrePullBackupKey(), JSON.stringify({ savedAt: new Date().toLocaleString('pt-BR'), data: current })); } catch (err) {}
+            saveDB();
+            setupCategorySelect();
+            setupPaymentMethodsSelect();
+            setDefaultDateForCurrentMonth();
+            ensureMonthExists(currentMonth);
+            updateDashboard();
+            setGithubStatus(`Cópia de segurança de ${b.savedAt} restaurada.`);
+            refreshRestoreBtn();
+        }
+
         async function pullFromGithub() {
             const cfg = getGithubConfig();
             if (!cfg.token || !cfg.owner || !cfg.repo || !cfg.path) { setGithubStatus('Preencha e salve as configurações antes de sincronizar.', true); return; }
@@ -4596,6 +4861,13 @@
                 const parsed = JSON.parse(b64DecodeUnicode(fileJson.content.replace(/\n/g, '')));
                 if (!parsed.categories || !parsed.months) throw new Error('Arquivo inválido: não parece um backup do FinDash.');
                 
+                const countItems = d => Object.values(d.months || {}).reduce((a, mm) => a + (mm.expenses || []).length + (mm.gains || []).length, 0);
+                const okPull = confirm(`Baixar do GitHub vai SUBSTITUIR os dados deste aparelho.\n\nNo GitHub: ${countItems(parsed)} lançamentos\nNeste aparelho: ${countItems(dbData)} lançamentos\n\nUma cópia de segurança dos dados atuais será guardada para você poder restaurar depois. Continuar?`);
+                if (!okPull) { setGithubStatus('Download cancelado. Nada foi alterado.'); return; }
+                if (!saveLocalBackupBeforePull()) {
+                    if (!confirm('Não foi possível guardar a cópia de segurança neste aparelho. Continuar mesmo assim?')) { setGithubStatus('Download cancelado. Nada foi alterado.'); return; }
+                }
+
                 // Substitui (não soma) os dados locais pelos do GitHub
                 ['categories', 'months', 'cards', 'goals', 'categoryBudgets'].forEach(k => {
                     if (parsed[k] !== undefined) dbData[k] = JSON.parse(JSON.stringify(parsed[k]));
@@ -4612,6 +4884,7 @@
                 cfg.lastSync = new Date().toLocaleString('pt-BR');
                 saveGithubConfig(cfg);
                 setGithubStatus(`Dados do GitHub substituíram os locais com sucesso em ${cfg.lastSync}.`);
+                refreshRestoreBtn();
                 if (typeof showNotification === 'function') {
                     showNotification('gain', 'Sincronizado!', 'Lançamentos locais substituídos pelos do GitHub.');
                 }
@@ -4630,6 +4903,7 @@
                 document.getElementById('ghBranch').value = cfg.branch || 'main';
                 document.getElementById('ghPath').value = cfg.path || 'findash-backup.json';
                 setGithubStatus(cfg.lastSync ? `Última sincronização: ${cfg.lastSync}` : '');
+                refreshRestoreBtn();
                 modal.classList.remove('hidden');
                 setTimeout(() => modal.classList.remove('opacity-0'), 10);
             };
@@ -4657,6 +4931,7 @@
 
             document.getElementById('ghPushBtn').addEventListener('click', pushToGithub);
             document.getElementById('ghPullBtn').addEventListener('click', pullFromGithub);
+            document.getElementById('ghRestoreBtn').addEventListener('click', restorePrePullBackup);
         }
 
         function setupModals() {
@@ -4691,7 +4966,13 @@
                         itemFound.dueDate = bucket.dueDate;
                     }
                     ensureMonthExists(m);
-                    typeItem === 'gain' ? dbData.months[m].gains.push(itemFound) : dbData.months[m].expenses.push(itemFound);
+                    if (typeItem === 'gain') dbData.months[m].gains.push(itemFound);
+                    else {
+                        dbData.months[m].expenses.push(itemFound);
+                        // remove cópia automática da fixa criada enquanto o item estava sendo editado
+                        const editedRecId = itemFound.recurrenceId || itemFound.id;
+                        dbData.months[m].expenses = dbData.months[m].expenses.filter(e => e === itemFound || e.recurrenceId !== editedRecId);
+                    }
                     saveDB(); editModal.classList.add('hidden');
                     if (typeItem === 'expense' && m !== currentMonth) { currentMonth = m; currentMonthInput.value = currentMonth; }
                     updateDashboard();
@@ -4881,7 +5162,11 @@
                 blocks.forEach(b => { map[b.dataset.blockId] = b; });
 
                 saved.forEach(id => { if (map[id]) zoneEl.appendChild(map[id]); });
-                blocks.forEach(b => { if (!saved.includes(b.dataset.blockId)) zoneEl.appendChild(b); });
+                blocks.forEach((b, i) => {
+                    if (saved.includes(b.dataset.blockId)) return;
+                    const prev = blocks[i - 1];
+                    if (prev) prev.after(b); else zoneEl.insertBefore(b, query(zoneEl)[0] || null);
+                });
             }
 
             function resetAll() {
