@@ -1627,6 +1627,34 @@
         </div>
     </div>
 
+    <div id="editSubscriptionModal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] hidden flex justify-center items-center opacity-0 transition-opacity duration-300 p-4">
+        <div class="glass-panel w-full max-w-md p-5">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">Editar Assinatura / Fixa</h3>
+                <button type="button" id="closeEditSubscriptionBtn" class="opacity-70 hover:opacity-100 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="editSubscriptionForm" class="space-y-3.5">
+                <input type="hidden" id="esIdInput">
+                <input type="text" id="esNameInput" required placeholder="Nome" class="w-full px-3.5 py-2.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl text-xs outline-none">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="relative">
+                        <span class="absolute left-3.5 top-2.5 text-xs opacity-50">R$</span>
+                        <input type="number" id="esValInput" required min="0.01" step="0.01" placeholder="Valor mensal" class="w-full pl-9 pr-3.5 py-2.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl text-xs outline-none">
+                    </div>
+                    <select id="esCategoryInput" required class="w-full px-3.5 py-2.5 bg-white dark:bg-[#1e293b] border border-black/10 dark:border-white/10 rounded-2xl text-xs outline-none appearance-none"></select>
+                </div>
+                <div>
+                    <label class="block text-[11px] opacity-70 mb-1">Forma de pagamento</label>
+                    <select id="esPaymentInput" class="w-full px-3.5 py-2.5 bg-white dark:bg-[#1e293b] border border-black/10 dark:border-white/10 rounded-2xl text-xs outline-none appearance-none"></select>
+                </div>
+                <label class="flex items-center gap-2 text-xs"><span class="opacity-70 shrink-0">Dia da cobrança</span>
+                    <input type="number" id="esDayInput" required min="1" max="31" class="w-20 px-3 py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl text-xs outline-none"></label>
+                <p class="text-[11px] opacity-60">A alteração vale a partir deste mês e para os meses seguintes. Meses anteriores não mudam.</p>
+                <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-xs shadow-lg transition">Salvar alterações</button>
+            </form>
+        </div>
+    </div>
+
     <div id="editModal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] hidden flex justify-center items-center opacity-0 transition-opacity duration-300 p-4">
         <div class="glass-panel w-full max-w-md p-5 transform scale-95 transition-transform duration-300">
             <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">Editar</h3><button id="closeEditModalBtn" class="opacity-70 hover:opacity-100"><i class="fa-solid fa-xmark text-lg"></i></button></div>
@@ -1668,6 +1696,9 @@
                             <option value="Outros">📦 Outros</option>
                         </select>
                     </div>
+                </div>
+                <div>
+                    <select id="subPaymentInput" class="w-full px-3.5 py-2.5 bg-white dark:bg-[#1e293b] border border-black/10 dark:border-white/10 rounded-2xl text-xs outline-none appearance-none"></select>
                 </div>
 
                 <button type="submit" class="w-full py-3 mt-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-xs shadow-lg transition">Salvar Assinatura</button>
@@ -2873,7 +2904,7 @@
                     const prev = dbData.months[prevKey];
                     defaultIncome = prev.income || 5000;
                     defaultAccountBalance = getMonthFinalAccountBalance(prevKey);
-                    recurrentExpenses = (prev.expenses || []).filter(exp => exp.recurrent).map(exp => ({ ...exp, id: generateId(), recurrenceId: exp.recurrenceId || exp.id, date: dateInMonthKeepingDay(exp.date, monthStr), createdAt: Date.now() }));
+                    recurrentExpenses = (prev.expenses || []).filter(exp => exp.recurrent).map(exp => { const copy = { ...exp, id: generateId(), recurrenceId: exp.recurrenceId || exp.id, date: dateInMonthKeepingDay(exp.date, monthStr), createdAt: Date.now() }; applyRecurrentPaymentFields(copy, monthStr); return copy; });
                 } else {
                     // Mês anterior a todos os existentes: mantém a cadeia de saldo coerente
                     const laterKeys = Object.keys(dbData.months).filter(k => k > monthStr).sort();
@@ -2897,7 +2928,7 @@
                         const recId = prevExp.recurrenceId || prevExp.id;
                         if (isRecurrenceSkipped(m, prevExp)) return;
                         const exists = m.expenses.some(e => (e.recurrenceId === recId) || (e.recurrent && e.description === prevExp.description && e.category === prevExp.category));
-                        if (!exists) { m.expenses.push({ ...prevExp, id: generateId(), recurrenceId: recId, date: dateInMonthKeepingDay(prevExp.date, monthStr), createdAt: Date.now() }); changed = true; }
+                        if (!exists) { const copy = { ...prevExp, id: generateId(), recurrenceId: recId, date: dateInMonthKeepingDay(prevExp.date, monthStr), createdAt: Date.now() }; applyRecurrentPaymentFields(copy, monthStr); m.expenses.push(copy); changed = true; }
                     });
                     if (changed) saveDB();
                 }
@@ -3196,6 +3227,16 @@
 
             populateOptions(select);
             populateOptions(editSelect);
+
+            ['subPaymentInput', 'esPaymentInput'].forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                const current = sel.value;
+                populateOptions(sel);
+                sel.querySelector('option[value="Débito"]').textContent = '💳 Débito automático';
+                if (current && [...sel.options].some(o => o.value === current)) sel.value = current;
+                else sel.value = 'Débito';
+            });
         }
 
         function addCard() {
@@ -3286,6 +3327,19 @@
             showNotification('expense', 'Meta Removida', 'O objetivo foi excluído.');
         }
 
+        // Despesas fixas no cartão ficam na fatura do mês em que estão; as demais não têm fatura
+        function applyRecurrentPaymentFields(exp, monthStr) {
+            const card = getCardByPaymentMethod(exp.paymentMethod);
+            if (card) {
+                const [y, m] = monthStr.split('-').map(Number);
+                exp.invoiceMonth = monthStr;
+                exp.dueDate = cardDateKey(cardDueDateFor(card, y, m - 1));
+            } else {
+                delete exp.invoiceMonth;
+                delete exp.dueDate;
+            }
+        }
+
         function addSubscription() {
             const name = document.getElementById('subNameInput').value.trim();
             const val = parseFloat(document.getElementById('subValInput').value);
@@ -3300,7 +3354,7 @@
                 typeItem: 'expense',
                 description: name,
                 category: category,
-                paymentMethod: 'Débito',
+                paymentMethod: (document.getElementById('subPaymentInput') && document.getElementById('subPaymentInput').value) || 'Débito',
                 date: `${currentMonth}-01`,
                 time: '08:00:00',
                 value: val,
@@ -3309,6 +3363,7 @@
                 createdAt: Date.now()
             };
 
+            applyRecurrentPaymentFields(expObj, currentMonth);
             dbData.months[currentMonth].expenses.push(expObj);
             saveDB();
 
@@ -3354,16 +3409,84 @@
                         </div>
                         <div class="overflow-hidden">
                             <h4 class="font-bold text-xs truncate">${exp.description}</h4>
-                            <p class="text-[11px] opacity-70">${categoryIcons[exp.category] || '📁'} ${exp.category} • Recorrência Mensal</p>
+                            <p class="text-[11px] opacity-70">${categoryIcons[exp.category] || '📁'} ${exp.category} • ${exp.paymentMethod === 'Débito' || !exp.paymentMethod ? 'Débito automático' : exp.paymentMethod} • Mensal</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-3 shrink-0">
                         <span class="font-bold text-rose-500 text-xs">${formatCurrency(exp.value)}</span>
-                        <button onclick="removeItem('${exp.id}', 'expense')" class="w-7 h-7 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition flex items-center justify-center"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                        <button onclick="openEditSubscription('${exp.id}')" title="Editar" class="w-7 h-7 rounded-xl bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 transition flex items-center justify-center"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button onclick="removeItem('${exp.id}', 'expense')" title="Excluir" class="w-7 h-7 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition flex items-center justify-center"><i class="fa-solid fa-trash text-[10px]"></i></button>
                     </div>
                 `;
                 listContainer.appendChild(li);
             });
+        }
+
+        window.openEditSubscription = function(id) {
+            const exp = (dbData.months[currentMonth].expenses || []).find(e => e.id === id);
+            if (!exp) return;
+            document.getElementById('esIdInput').value = exp.id;
+            document.getElementById('esNameInput').value = exp.description;
+            document.getElementById('esValInput').value = exp.value;
+            document.getElementById('esDayInput').value = parseInt((exp.date || '').split('-')[2], 10) || 1;
+            const sel = document.getElementById('esCategoryInput');
+            sel.innerHTML = '';
+            const cats = Object.keys(dbData.categories);
+            if (!cats.includes(exp.category)) cats.push(exp.category);
+            cats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = `${categoryIcons[c] || '📁'} ${c}`; sel.appendChild(o); });
+            sel.value = exp.category;
+            const paySel = document.getElementById('esPaymentInput');
+            setupPaymentMethodsSelect();
+            if (exp.paymentMethod && ![...paySel.options].some(o => o.value === exp.paymentMethod)) {
+                const o = document.createElement('option'); o.value = exp.paymentMethod; o.textContent = exp.paymentMethod; paySel.appendChild(o);
+            }
+            paySel.value = exp.paymentMethod || 'Débito';
+            const modal = document.getElementById('editSubscriptionModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        };
+
+        function closeEditSubscription() {
+            const modal = document.getElementById('editSubscriptionModal');
+            modal.classList.add('opacity-0');
+            modal.classList.add('hidden');
+        }
+
+        function saveEditedSubscription() {
+            const id = document.getElementById('esIdInput').value;
+            const name = document.getElementById('esNameInput').value.trim();
+            const val = parseFloat(document.getElementById('esValInput').value);
+            const cat = document.getElementById('esCategoryInput').value;
+            const day = parseInt(document.getElementById('esDayInput').value, 10);
+            const payment = document.getElementById('esPaymentInput').value || 'Débito';
+            if (!name || isNaN(val) || val <= 0 || !cat || isNaN(day) || day < 1 || day > 31) return;
+
+            const base = (dbData.months[currentMonth].expenses || []).find(e => e.id === id);
+            if (!base) return;
+            const recId = base.recurrenceId || base.id;
+            const oldDesc = base.description, oldCat = base.category;
+
+            Object.keys(dbData.months).sort().forEach(mStr => {
+                if (mStr < currentMonth) return;
+                (dbData.months[mStr].expenses || []).forEach(e => {
+                    const same = e.id === id || e.recurrenceId === recId || (e.recurrent && e.description === oldDesc && e.category === oldCat);
+                    if (!same || !e.recurrent) return;
+                    e.description = name;
+                    e.category = cat;
+                    e.value = val;
+                    e.paymentMethod = payment;
+                    applyRecurrentPaymentFields(e, mStr);
+                    e.type = dbData.categories[cat] || e.type || 'wants';
+                    const [yy, mm] = mStr.split('-').map(Number);
+                    const dim = new Date(yy, mm, 0).getDate();
+                    e.date = `${mStr}-${String(Math.min(day, dim)).padStart(2, '0')}`;
+                });
+            });
+            saveDB();
+            closeEditSubscription();
+            renderSubscriptionsView();
+            updateDashboard();
+            showNotification('gain', 'Assinatura atualizada', `"${name}" agora custa ${formatCurrency(val)} por mês.`);
         }
 
         function renderBudgetsView() {
@@ -3615,6 +3738,7 @@
                 monthObj.expenses.forEach(exp => {
                     const card = getCardByPaymentMethod(exp.paymentMethod);
                     if (!card || !exp.date) { staying.push(exp); return; }
+                    if (exp.recurrent) { applyRecurrentPaymentFields(exp, monthStr); staying.push(exp); return; }
 
                     const correctMonth = getCardInvoiceMonth(exp.date, card);
                     exp.invoiceMonth = correctMonth;
@@ -5213,6 +5337,9 @@
             document.getElementById('historyBtn').addEventListener('click', () => { renderHistoryTable(); historyModal.classList.remove('hidden'); setTimeout(() => historyModal.classList.remove('opacity-0'), 10); });
             document.getElementById('closeHistoryModalBtn').addEventListener('click', () => historyModal.classList.add('hidden'));
             document.getElementById('closeCardStatementBtn').addEventListener('click', closeCardStatement);
+            document.getElementById('closeEditSubscriptionBtn').addEventListener('click', closeEditSubscription);
+            document.getElementById('editSubscriptionModal').addEventListener('click', (e) => { if (e.target.id === 'editSubscriptionModal') closeEditSubscription(); });
+            document.getElementById('editSubscriptionForm').addEventListener('submit', (e) => { e.preventDefault(); saveEditedSubscription(); });
             document.getElementById('cardStatementModal').addEventListener('click', (e) => { if (e.target.id === 'cardStatementModal') closeCardStatement(); });
 
             const catModal = document.getElementById('categoryModal');
