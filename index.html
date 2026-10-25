@@ -3529,32 +3529,62 @@
             return (dbData.cards || []).find(c => c.name === cardName) || null;
         }
 
+        // Regra brasileira: o vencimento cai sempre no mesmo dia e o fechamento acontece um número
+        // fixo de dias ANTES dele. Por isso o dia do mês do fechamento muda conforme o tamanho dos meses.
+        function getCardClosingGap(card) {
+            if (Number.isInteger(card.closingGap) && card.closingGap >= 0) return card.closingGap;
+            const c = parseInt(card.closingDay, 10), d = parseInt(card.dueDay, 10);
+            return d >= c ? d - c : d + 30 - c; // intervalo de referência (mês de 30 dias)
+        }
+
+        function cardDueDateFor(card, y, m0) {
+            const dim = new Date(y, m0 + 1, 0).getDate();
+            return new Date(y, m0, Math.min(parseInt(card.dueDay, 10), dim));
+        }
+
+        function cardClosingDateFor(card, y, m0) {
+            const due = cardDueDateFor(card, y, m0);
+            return new Date(due.getFullYear(), due.getMonth(), due.getDate() - getCardClosingGap(card));
+        }
+
+        function findCardInvoiceFor(card, purchaseDate) {
+            const base = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth(), 1);
+            let last = null;
+            for (let off = -1; off <= 4; off++) {
+                const ref = new Date(base.getFullYear(), base.getMonth() + off, 1);
+                const closing = cardClosingDateFor(card, ref.getFullYear(), ref.getMonth());
+                const due = cardDueDateFor(card, ref.getFullYear(), ref.getMonth());
+                last = { closing, due };
+                if (closing >= purchaseDate) return last; // compra no dia do fechamento ainda entra nesta fatura
+            }
+            return last;
+        }
+
+        function cardDateKey(d) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
         function getCardInvoiceMonth(dateStr, card) {
-            let [year, month, day] = dateStr.split('-').map(Number);
-            month -= 1; // trabalha com mês 0-indexado
-
-            // Compra feita após o fechamento -> entra na fatura do ciclo seguinte
-            if (day > card.closingDay) {
-                month += 1;
-            }
-            // Se o vencimento configurado for "antes" do fechamento no calendário,
-            // significa que a fatura fechada neste mês só vence no mês seguinte
-            if (card.dueDay < card.closingDay) {
-                month += 1;
-            }
-
-            while (month > 11) { month -= 12; year += 1; }
-            while (month < 0) { month += 12; year -= 1; }
-
-            return `${year}-${String(month + 1).padStart(2, '0')}`;
+            const [y, mo, d] = dateStr.split('-').map(Number);
+            const inv = findCardInvoiceFor(card, new Date(y, mo - 1, d));
+            return cardDateKey(inv.due).slice(0, 7);
         }
 
         function getCardInvoiceDueDateStr(dateStr, card) {
-            const invoiceMonth = getCardInvoiceMonth(dateStr, card);
-            const [y, m] = invoiceMonth.split('-').map(Number);
-            const maxDay = new Date(y, m, 0).getDate();
-            const safeDay = Math.min(card.dueDay, maxDay);
-            return `${invoiceMonth}-${String(safeDay).padStart(2, '0')}`;
+            const [y, mo, d] = dateStr.split('-').map(Number);
+            const inv = findCardInvoiceFor(card, new Date(y, mo - 1, d));
+            return cardDateKey(inv.due);
+        }
+
+        // Fatura aberta hoje (a que recebe as compras de agora)
+        function getCardOpenCycle(card) {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const inv = findCardInvoiceFor(card, today);
+            const prevClosing = cardClosingDateFor(card, inv.due.getFullYear(), inv.due.getMonth() - 1);
+            const startDate = new Date(prevClosing.getFullYear(), prevClosing.getMonth(), prevClosing.getDate() + 1);
+            const bestDay = new Date(inv.closing.getFullYear(), inv.closing.getMonth(), inv.closing.getDate() + 1);
+            return { today, closeDate: inv.closing, dueDate: inv.due, startDate, bestDay, invoiceMonth: cardDateKey(inv.due).slice(0, 7) };
         }
 
         function formatInvoiceLabel(monthStr) {
@@ -3575,12 +3605,7 @@
 
         // Corrige automaticamente, uma única vez, lançamentos de cartão que foram
         // salvos no mês errado antes desta correção existir (bug relatado pelo usuário).
-        function migrateCardInvoiceMonths() {
-            if (!dbData || dbData._invoiceMigrationV1 || !dbData.cards || dbData.cards.length === 0) {
-                if (dbData) dbData._invoiceMigrationV1 = true;
-                return;
-            }
-
+        function rebucketCardExpenses() {
             let moved = 0;
             Object.keys(dbData.months).slice().forEach(monthStr => {
                 const monthObj = dbData.months[monthStr];
@@ -3605,10 +3630,34 @@
                 });
                 monthObj.expenses = staying;
             });
-
-            dbData._invoiceMigrationV1 = true;
-            if (moved > 0) saveDB();
+            return moved;
         }
+
+        // Roda uma vez: aplica a regra brasileira de fechamento às compras de cartão já lançadas
+        function migrateCardInvoiceMonths() {
+            if (!dbData) return;
+            if (!dbData.cards || dbData.cards.length === 0) { dbData._invoiceMigrationV2 = true; return; }
+            if (dbData._invoiceMigrationV2) return;
+            try { localStorage.setItem(getProfileDbKey(currentProfileId) + '_precard_backup', JSON.stringify({ savedAt: new Date().toLocaleString('pt-BR'), data: dbData })); } catch (err) {}
+            const moved = rebucketCardExpenses();
+            dbData._invoiceMigrationV2 = true;
+            saveDB();
+            if (moved > 0) console.info(`Fechamento de cartão: ${moved} lançamento(s) reclassificado(s).`);
+        }
+
+        window.editCardGap = function(cardId) {
+            const card = (dbData.cards || []).find(c => c.id === cardId);
+            if (!card) return;
+            const cur = getCardClosingGap(card);
+            const raw = prompt(`Quantos dias ANTES do vencimento a fatura do "${card.name}" fecha?\n\nNos bancos o intervalo é fixo, então o dia do fechamento muda de mês para mês. Intervalo atual: ${cur} dias.`, cur);
+            if (raw === null) return;
+            const n = parseInt(raw.trim(), 10);
+            if (isNaN(n) || n < 0 || n > 31) { alert('Informe um número de dias entre 0 e 31.'); return; }
+            card.closingGap = n;
+            const moved = rebucketCardExpenses();
+            saveDB(); renderCardsView(); updateDashboard();
+            if (moved > 0) alert(`${moved} lançamento(s) de cartão foram movidos para a fatura correta.`);
+        };
 
         function addExpense() {
             const desc = document.getElementById('descInput').value.trim();
@@ -4412,7 +4461,10 @@
                 const committed = cardCommitted[card.name] || 0;
                 const available = Math.max(card.limit - committed, 0);
                 const pct = card.limit > 0 ? Math.min((committed / card.limit) * 100, 100) : 0;
-                const dueDateLabel = String(card.dueDay).padStart(2, '0') + '/' + String(parseInt(currentMonth.split('-')[1])).padStart(2, '0');
+                const [vy, vm] = currentMonth.split('-').map(Number);
+                const dueDateLabel = String(Math.min(card.dueDay, new Date(vy, vm, 0).getDate())).padStart(2, '0') + '/' + String(vm).padStart(2, '0');
+                const cyc = getCardOpenCycle(card);
+                const fmtDM = (d) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
 
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'card-item glass-panel p-5 flex flex-col justify-between relative overflow-hidden group';
@@ -4451,8 +4503,12 @@
                         <button type="button" onclick="openCardStatement('${card.id}')" class="py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 text-xs font-bold transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-list-ul text-[10px]"></i> Ver extrato</button>
                     </div>
                     <div class="pt-3 border-t border-black/10 dark:border-white/10 flex justify-between text-[11px] opacity-70">
-                        <span>Fechamento: Dia ${card.closingDay}</span>
-                        <span>Vencimento: Dia ${card.dueDay}</span>
+                        <span>Fecha em ${fmtDM(cyc.closeDate)}</span>
+                        <span>Vence em ${fmtDM(cyc.dueDate)}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[11px] opacity-70 mt-1.5">
+                        <span>Melhor dia de compra: ${fmtDM(cyc.bestDay)}</span>
+                        <button type="button" onclick="editCardGap('${card.id}')" class="underline opacity-80 hover:opacity-100">ajustar fechamento</button>
                     </div>
                 `;
                 grid.appendChild(cardDiv);
@@ -4499,23 +4555,13 @@
             const card = (dbData.cards || []).find(c => c.id === cardId);
             if (!card) return;
             const tag = 'Cartão: ' + card.name;
-            const now = new Date();
-            const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-            const invoiceMonth = getCardInvoiceMonth(todayStr, card);
-            const dueDate = getCardInvoiceDueDateStr(todayStr, card);
-
-            // fechamento do ciclo aberto: este mês se hoje <= dia de fechamento, senão no mês seguinte
-            const cm = now.getDate() <= card.closingDay ? now.getMonth() : now.getMonth() + 1;
-            const closeOf = (y, mo) => new Date(y, mo, Math.min(card.closingDay, new Date(y, mo + 1, 0).getDate()));
-            const closeDate = closeOf(now.getFullYear(), cm);
-            const prevClose = closeOf(now.getFullYear(), cm - 1);
-            const startDate = new Date(prevClose); startDate.setDate(startDate.getDate() + 1);
+            const cyc = getCardOpenCycle(card);
+            const invoiceMonth = cyc.invoiceMonth;
+            const dueDate = cardDateKey(cyc.dueDate);
+            const closeDate = cyc.closeDate, startDate = cyc.startDate, dueD = cyc.dueDate;
             const fmtD = (d) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
             const fmtDate = (d) => d ? d.split('-').reverse().join('/') : '';
-            const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const daysTo = (d) => Math.round((d - today0) / 86400000);
-            const [dy, dm, dd] = dueDate.split('-').map(Number);
-            const dueD = new Date(dy, dm - 1, dd);
+            const daysTo = (d) => Math.round((d - cyc.today) / 86400000);
 
             const items = ((dbData.months[invoiceMonth] && dbData.months[invoiceMonth].expenses) || [])
                 .filter(e => e.paymentMethod === tag)
