@@ -1591,10 +1591,6 @@
                     <label for="recurrentCheck" class="text-xs opacity-80 cursor-pointer">Despesa Fixa (repetir mensalmente)</label>
                 </div>
 
-                <div class="items-start gap-2.5 pt-1" id="gainPartialWrapper" style="display:none">
-                    <input type="checkbox" id="gainPartialCheck" class="w-4 h-4 mt-0.5 rounded border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 accent-emerald-500 cursor-pointer">
-                    <label for="gainPartialCheck" class="text-xs opacity-80 cursor-pointer">Ganho picado: não aumentar a Renda Mensal<span class="block text-[10px] opacity-70">Soma no saldo da conta e nos demais totais, mas não entra na renda do mês.</span></label>
-                </div>
 
                 <button type="submit" class="w-full py-3 mt-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-xs shadow-lg transition">Confirmar Lançamento</button>
             </form>
@@ -1619,7 +1615,6 @@
                 <div class="grid grid-cols-2 gap-3"><input type="date" id="editDateInput" required class="w-full px-3.5 py-2.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl text-xs [color-scheme:dark]"><input type="time" id="editTimeInput" required class="w-full px-3.5 py-2.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl text-xs [color-scheme:dark]"></div>
                 <input type="number" id="editValInput" required min="0.01" step="0.01" class="w-full px-3.5 py-2.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl text-xs">
                 <div class="flex items-center gap-2.5" id="editRecurrentWrapper"><input type="checkbox" id="editRecurrentCheck" class="w-4 h-4 rounded border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 accent-indigo-500"><label for="editRecurrentCheck" class="text-xs opacity-80">Despesa fixa</label></div>
-                <div class="flex items-center gap-2.5" id="editGainPartialWrapper" style="display:none"><input type="checkbox" id="editGainPartialCheck" class="w-4 h-4 rounded border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 accent-emerald-500"><label for="editGainPartialCheck" class="text-xs opacity-80">Ganho picado (não soma na Renda Mensal)</label></div>
                 <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-xs">Salvar</button>
             </form>
         </div>
@@ -2711,7 +2706,6 @@
                 document.getElementById('paymentMethodWrapper').style.display = 'block';
                 document.getElementById('installmentWrapper').style.display = 'block';
                 document.getElementById('recurrentWrapper').style.display = 'flex';
-                document.getElementById('gainPartialWrapper').style.display = 'none';
                 setupCategorySelect();
             });
 
@@ -2722,7 +2716,6 @@
                 document.getElementById('paymentMethodWrapper').style.display = 'none';
                 document.getElementById('installmentWrapper').style.display = 'none';
                 document.getElementById('recurrentWrapper').style.display = 'none';
-                document.getElementById('gainPartialWrapper').style.display = 'flex';
                 setupGainCategorySelect();
             });
 
@@ -3667,13 +3660,8 @@
             const targetMonth = dateVal.slice(0, 7);
             ensureMonthExists(targetMonth);
 
-            const partialGain = document.getElementById('gainPartialCheck').checked;
-            dbData.months[targetMonth].gains.push({
-                id: generateId(), typeItem: 'gain', description: desc, category: cat, date: dateVal, time: timeVal, value: val, createdAt: Date.now(),
-                ...(partialGain ? { excludeFromIncome: true } : {})
-            });
-            saveDB(); showNotification('gain', `Ganho: +${formatCurrency(val)}`, partialGain ? "Somado na conta, sem alterar a Renda Mensal." : "Mais um resultado para a conta!");
-            document.getElementById('gainPartialCheck').checked = false;
+            dbData.months[targetMonth].gains.push({ id: generateId(), typeItem: 'gain', description: desc, category: cat, date: dateVal, time: timeVal, value: val, createdAt: Date.now() });
+            saveDB(); showNotification('gain', `Ganho: +${formatCurrency(val)}`, "Mais um resultado para a conta!");
             document.getElementById('descInput').value = ''; document.getElementById('valInput').value = ''; setDefaultDateForCurrentMonth(); isTimeInputFocused = false; updateDashboard();
         }
 
@@ -3718,10 +3706,7 @@
                 gainCats.forEach(c => { const o = document.createElement('option'); o.value = c.name; o.textContent = `${c.icon} ${c.name}`; editCat.appendChild(o); });
                 document.getElementById('editPaymentWrapper').style.display = 'none';
                 document.getElementById('editRecurrentWrapper').style.display = 'none';
-                document.getElementById('editGainPartialWrapper').style.display = 'flex';
-                document.getElementById('editGainPartialCheck').checked = !!foundItem.excludeFromIncome;
             } else {
-                document.getElementById('editGainPartialWrapper').style.display = 'none';
                 setupCategorySelect();
                 setupPaymentMethodsSelect();
                 document.getElementById('editPaymentWrapper').style.display = 'block';
@@ -4078,7 +4063,7 @@
         function getMonthTotalIncome(monthStr) {
             const m = dbData.months[monthStr];
             if (!m) return 0;
-            return (m.income || 0) + (m.gains || []).filter(g => !g.excludeFromIncome).reduce((acc, curr) => acc + curr.value, 0);
+            return (m.income || 0) + (m.gains || []).reduce((acc, curr) => acc + curr.value, 0);
         }
 
         function calculateStats() {
@@ -4139,7 +4124,7 @@
                     <div class="flex items-center gap-3 overflow-hidden">
                         <div class="w-9 h-9 rounded-xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex items-center justify-center shrink-0"><i class="fa-solid ${iconClass} text-xs"></i></div>
                         <div class="overflow-hidden">
-                            <p class="text-xs font-semibold flex items-center gap-1.5 truncate"><span class="truncate">${item.description}</span>${item.excludeFromIncome ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-500 px-1.5 py-0.5 rounded-full" title="Não soma na Renda Mensal">Picado</span>' : ''}${item.recurrent ? '<span class="text-[9px] bg-indigo-500/20 text-indigo-500 px-1.5 py-0.5 rounded-full">Fixa</span>' : ''}</p>
+                            <p class="text-xs font-semibold flex items-center gap-1.5 truncate"><span class="truncate">${item.description}</span>${item.recurrent ? '<span class="text-[9px] bg-indigo-500/20 text-indigo-500 px-1.5 py-0.5 rounded-full">Fixa</span>' : ''}</p>
                             <p class="text-[11px] opacity-70 truncate mt-0.5">${subtitle}</p>
                         </div>
                     </div>
@@ -4242,7 +4227,7 @@
                         <div class="flex items-center gap-3 overflow-hidden">
                             <div class="w-9 h-9 rounded-xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex items-center justify-center shrink-0"><i class="fa-solid fa-arrow-trend-up text-emerald-500 text-xs"></i></div>
                             <div class="overflow-hidden">
-                                <p class="text-xs font-semibold truncate"><span class="truncate">${item.description}</span>${item.excludeFromIncome ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-500 px-1.5 py-0.5 rounded-full" title="Não soma na Renda Mensal">Picado</span>' : ''}</p>
+                                <p class="text-xs font-semibold truncate"><span class="truncate">${item.description}</span></p>
                                 <p class="text-[11px] opacity-70 truncate mt-0.5">${subtitle}</p>
                             </div>
                         </div>
@@ -5006,9 +4991,6 @@
                 if (itemFound && desc && cat && !isNaN(val)) {
                     itemFound.description = desc; itemFound.category = cat; itemFound.date = dateVal; itemFound.time = document.getElementById('editTimeInput').value; itemFound.value = val;
                     let m = dateVal.slice(0, 7);
-                    if (typeItem === 'gain') {
-                        if (document.getElementById('editGainPartialCheck').checked) itemFound.excludeFromIncome = true; else delete itemFound.excludeFromIncome;
-                    }
                     if (typeItem === 'expense') {
                         const editedPaymentMethod = document.getElementById('editPaymentMethodInput').value;
                         itemFound.paymentMethod = editedPaymentMethod;
