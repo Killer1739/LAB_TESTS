@@ -1613,6 +1613,20 @@
         </div>
     </div>
 
+    <div id="cardStatementModal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] hidden flex justify-center items-center opacity-0 transition-opacity duration-300 p-4">
+        <div class="glass-panel w-full max-w-lg p-5">
+            <div class="flex justify-between items-start mb-3 gap-3">
+                <div class="min-w-0">
+                    <span id="cardStatementBrand" class="text-[10px] uppercase tracking-wider text-indigo-500 font-semibold"></span>
+                    <h3 id="cardStatementTitle" class="text-lg font-bold truncate">Extrato do cartão</h3>
+                </div>
+                <button type="button" id="closeCardStatementBtn" class="opacity-70 hover:opacity-100"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p id="cardStatementSummary" class="text-xs opacity-70 mb-3"></p>
+            <div id="cardStatementList" class="overflow-y-auto pr-1 space-y-4" style="max-height: 60vh;"></div>
+        </div>
+    </div>
+
     <div id="editModal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] hidden flex justify-center items-center opacity-0 transition-opacity duration-300 p-4">
         <div class="glass-panel w-full max-w-md p-5 transform scale-95 transition-transform duration-300">
             <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">Editar</h3><button id="closeEditModalBtn" class="opacity-70 hover:opacity-100"><i class="fa-solid fa-xmark text-lg"></i></button></div>
@@ -4432,6 +4446,7 @@
                             </div>
                         </div>
                     </div>
+                    <button type="button" onclick="openCardStatement('${card.id}')" class="w-full mb-3 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 text-xs font-bold transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-list-ul text-[10px]"></i> Ver extrato</button>
                     <div class="pt-3 border-t border-black/10 dark:border-white/10 flex justify-between text-[11px] opacity-70">
                         <span>Fechamento: Dia ${card.closingDay}</span>
                         <span>Vencimento: Dia ${card.dueDay}</span>
@@ -4439,6 +4454,48 @@
                 `;
                 grid.appendChild(cardDiv);
             });
+        }
+
+        window.openCardStatement = function(cardId) {
+            const card = (dbData.cards || []).find(c => c.id === cardId);
+            if (!card) return;
+            const tag = 'Cartão: ' + card.name;
+            const groups = {};
+            let total = 0, count = 0;
+            Object.keys(dbData.months).forEach(mStr => {
+                (dbData.months[mStr].expenses || []).forEach(e => {
+                    if (e.paymentMethod !== tag) return;
+                    const key = e.dueDate || `${mStr}-${String(card.dueDay).padStart(2, '0')}`;
+                    if (!groups[key]) groups[key] = { due: key, items: [], total: 0 };
+                    groups[key].items.push(e);
+                    groups[key].total += e.value;
+                    total += e.value; count++;
+                });
+            });
+            document.getElementById('cardStatementBrand').textContent = card.brand || '';
+            document.getElementById('cardStatementTitle').textContent = 'Extrato • ' + card.name;
+            document.getElementById('cardStatementSummary').textContent = count === 0 ? 'Nenhum lançamento neste cartão ainda.' : `${count} lançamento${count !== 1 ? 's' : ''} em ${Object.keys(groups).length} fatura${Object.keys(groups).length !== 1 ? 's' : ''} • Total ${formatCurrency(total)}`;
+            const fmtDate = (d) => d ? d.split('-').reverse().join('/') : '';
+            const list = document.getElementById('cardStatementList');
+            list.innerHTML = Object.values(groups).sort((a, b) => b.due.localeCompare(a.due)).map(g => {
+                const items = g.items.slice().sort((a, b) => ((b.date || '') + (b.time || '')).localeCompare((a.date || '') + (a.time || '')));
+                return `<div>
+                    <div class="flex justify-between items-center text-[11px] font-bold mb-1.5 pb-1 border-b border-black/10 dark:border-white/10">
+                        <span class="text-indigo-500"><i class="fa-regular fa-calendar mr-1"></i>Fatura com vencimento em ${fmtDate(g.due)}</span>
+                        <span class="text-rose-500">${formatCurrency(g.total)}</span>
+                    </div>
+                    <ul class="space-y-1.5">${items.map(e => `<li class="flex justify-between items-center gap-2 text-xs"><span class="min-w-0"><span class="block truncate font-semibold">${fdEsc(e.description)}</span><span class="block text-[10px] opacity-60 truncate">${categoryIcons[e.category] || '📁'} ${fdEsc(e.category)} • ${fmtDate(e.date)}</span></span><span class="font-bold shrink-0">- ${formatCurrency(e.value)}</span></li>`).join('')}</ul>
+                </div>`;
+            }).join('');
+            const modal = document.getElementById('cardStatementModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        };
+
+        function closeCardStatement() {
+            const modal = document.getElementById('cardStatementModal');
+            modal.classList.add('opacity-0');
+            modal.classList.add('hidden');
         }
 
         function renderRaioXView() {
@@ -5063,6 +5120,8 @@
             const historyModal = document.getElementById('historyModal');
             document.getElementById('historyBtn').addEventListener('click', () => { renderHistoryTable(); historyModal.classList.remove('hidden'); setTimeout(() => historyModal.classList.remove('opacity-0'), 10); });
             document.getElementById('closeHistoryModalBtn').addEventListener('click', () => historyModal.classList.add('hidden'));
+            document.getElementById('closeCardStatementBtn').addEventListener('click', closeCardStatement);
+            document.getElementById('cardStatementModal').addEventListener('click', (e) => { if (e.target.id === 'cardStatementModal') closeCardStatement(); });
 
             const catModal = document.getElementById('categoryModal');
             const setCatModalMode = () => {
