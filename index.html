@@ -1136,6 +1136,7 @@
                                 <p class="text-xs opacity-70">Sem despesas no período</p>
                             </div>
                         </div>
+                        <ul id="expensesCategoryList" class="w-full space-y-1.5 max-h-48 overflow-y-auto pr-1 mt-3"></ul>
                     </div>
                 </div>
 
@@ -4185,6 +4186,7 @@
 
             const labels = Object.keys(byCategory);
             const data = Object.values(byCategory);
+            renderCategoryValuesList(labels, data, 'expensesCategoryList');
 
             if (labels.length === 0) {
                 emptyState.style.opacity = '1';
@@ -4201,7 +4203,8 @@
                 expensesCategoryChartInstance = new Chart(ctx, {
                     type: 'doughnut',
                     data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] },
-                    options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { color: htmlElement.classList.contains('dark') ? '#cbd5e1' : '#475569', font: { size: 10 }, usePointStyle: true, boxWidth: 5, padding: 10 } } } }
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } },
+                    plugins: [donutCenterTotalPlugin]
                 });
             }
         }
@@ -4508,25 +4511,56 @@
             needsBar.style.width = `${Math.min(needsPct, 100)}%`; wantsBar.style.width = `${Math.min(wantsPct, 100)}%`; savingBar.style.width = `${Math.max(Math.min(savingsPct, 100), 0)}%`;
         }
 
-        function renderCategoryValuesList(labels, data) {
-            const list = document.getElementById('categoryValuesList');
+        const donutCenterTotalPlugin = {
+            id: 'donutCenterTotal',
+            afterDraw(chart) {
+                const ds = chart.data.datasets[0];
+                if (!ds) return;
+                const total = (ds.data || []).reduce((a, b) => a + b, 0);
+                const { ctx, chartArea } = chart;
+                if (!chartArea) return;
+                const cx = (chartArea.left + chartArea.right) / 2;
+                const cy = (chartArea.top + chartArea.bottom) / 2;
+                const inner = Math.min(chartArea.width, chartArea.height) * 0.75;
+                const isDark = htmlElement.classList.contains('dark');
+                const text = formatCurrency(total);
+                let size = Math.max(11, Math.min(20, inner * 0.13));
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = `700 ${size}px Inter, system-ui, sans-serif`;
+                while (ctx.measureText(text).width > inner * 0.85 && size > 9) { size -= 1; ctx.font = `700 ${size}px Inter, system-ui, sans-serif`; }
+                ctx.fillStyle = isDark ? '#f1f5f9' : '#0f172a';
+                ctx.fillText(text, cx, cy + size * 0.35);
+                ctx.font = `500 ${Math.max(9, size * 0.55)}px Inter, system-ui, sans-serif`;
+                ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+                ctx.fillText('Total gasto', cx, cy - size * 0.75);
+                ctx.restore();
+            }
+        };
+
+        function renderCategoryValuesList(labels, data, listId = 'categoryValuesList') {
+            const list = document.getElementById(listId);
             if (!list) return;
             list.innerHTML = '';
             const total = data.reduce((a, b) => a + b, 0);
             labels.map((name, i) => ({ name, value: data[i], color: colors[i % colors.length] }))
                 .sort((a, b) => b.value - a.value)
-                .forEach(item => {
+                .forEach((item, rankIndex) => {
                     const li = document.createElement('li');
                     li.className = 'flex items-center justify-between gap-2 text-xs';
                     const left = document.createElement('span');
                     left.className = 'flex items-center gap-2 min-w-0';
+                    const rank = document.createElement('span');
+                    rank.className = 'w-5 shrink-0 text-center text-[10px] font-bold ' + (rankIndex === 0 ? 'text-amber-400' : 'opacity-60');
+                    rank.textContent = `${rankIndex + 1}º`;
                     const dot = document.createElement('span');
                     dot.className = 'w-2.5 h-2.5 rounded-full shrink-0';
                     dot.style.background = item.color;
                     const nm = document.createElement('span');
                     nm.className = 'truncate opacity-80';
                     nm.textContent = item.name;
-                    left.appendChild(dot); left.appendChild(nm);
+                    left.appendChild(rank); left.appendChild(dot); left.appendChild(nm);
                     const right = document.createElement('span');
                     right.className = 'shrink-0 font-semibold';
                     const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : '0.0';
@@ -4549,7 +4583,7 @@
             emptyState.style.opacity = '0';
             if (chartInstance) { chartInstance.data.labels = labels; chartInstance.data.datasets[0].data = data; chartInstance.update(); }
             else {
-                chartInstance = new Chart(ctx, { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } } });
+                chartInstance = new Chart(ctx, { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }, plugins: [donutCenterTotalPlugin] });
             }
         }
 
