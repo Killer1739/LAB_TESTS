@@ -1591,6 +1591,11 @@
                     <label for="recurrentCheck" class="text-xs opacity-80 cursor-pointer">Despesa Fixa (repetir mensalmente)</label>
                 </div>
 
+                <div class="items-start gap-2.5 pt-1" id="gainPartialWrapper" style="display:none">
+                    <input type="checkbox" id="gainPartialCheck" class="w-4 h-4 mt-0.5 rounded border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 accent-emerald-500 cursor-pointer">
+                    <label for="gainPartialCheck" class="text-xs opacity-80 cursor-pointer">Ganho picado: não aumentar a Renda Mensal<span class="block text-[10px] opacity-70">Soma no saldo da conta e nos demais totais, mas não entra na renda do mês.</span></label>
+                </div>
+
                 <button type="submit" class="w-full py-3 mt-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-xs shadow-lg transition">Confirmar Lançamento</button>
             </form>
         </div>
@@ -1614,6 +1619,7 @@
                 <div class="grid grid-cols-2 gap-3"><input type="date" id="editDateInput" required class="w-full px-3.5 py-2.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl text-xs [color-scheme:dark]"><input type="time" id="editTimeInput" required class="w-full px-3.5 py-2.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl text-xs [color-scheme:dark]"></div>
                 <input type="number" id="editValInput" required min="0.01" step="0.01" class="w-full px-3.5 py-2.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl text-xs">
                 <div class="flex items-center gap-2.5" id="editRecurrentWrapper"><input type="checkbox" id="editRecurrentCheck" class="w-4 h-4 rounded border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 accent-indigo-500"><label for="editRecurrentCheck" class="text-xs opacity-80">Despesa fixa</label></div>
+                <div class="flex items-center gap-2.5" id="editGainPartialWrapper" style="display:none"><input type="checkbox" id="editGainPartialCheck" class="w-4 h-4 rounded border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 accent-emerald-500"><label for="editGainPartialCheck" class="text-xs opacity-80">Ganho picado (não soma na Renda Mensal)</label></div>
                 <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-xs">Salvar</button>
             </form>
         </div>
@@ -1653,7 +1659,7 @@
 
     <div id="categoryModal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] hidden flex justify-center items-center opacity-0 transition-opacity duration-300 p-4">
         <div class="glass-panel w-full max-w-sm p-5 transform scale-95 transition-transform duration-300">
-            <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">Nova Categoria</h3><button id="closeModalBtn" class="opacity-70 hover:opacity-100"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+            <div class="flex justify-between items-center mb-4"><h3 id="categoryModalTitle" class="text-lg font-bold">Nova Categoria</h3><button id="closeModalBtn" class="opacity-70 hover:opacity-100"><i class="fa-solid fa-xmark text-lg"></i></button></div>
             <div class="space-y-3.5">
                 <input type="text" id="newCatName" placeholder="Nome" class="w-full px-3.5 py-2.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl text-xs">
                 <select id="newCatType" class="w-full px-3.5 py-2.5 bg-white dark:bg-[#1e293b] border border-black/10 dark:border-white/10 rounded-2xl text-xs appearance-none"><option value="needs">Necessidade (50%)</option><option value="wants">Desejo/Lazer (30%)</option><option value="savings">Poupança/Dívida (20%)</option></select>
@@ -2705,6 +2711,7 @@
                 document.getElementById('paymentMethodWrapper').style.display = 'block';
                 document.getElementById('installmentWrapper').style.display = 'block';
                 document.getElementById('recurrentWrapper').style.display = 'flex';
+                document.getElementById('gainPartialWrapper').style.display = 'none';
                 setupCategorySelect();
             });
 
@@ -2715,6 +2722,7 @@
                 document.getElementById('paymentMethodWrapper').style.display = 'none';
                 document.getElementById('installmentWrapper').style.display = 'none';
                 document.getElementById('recurrentWrapper').style.display = 'none';
+                document.getElementById('gainPartialWrapper').style.display = 'flex';
                 setupGainCategorySelect();
             });
 
@@ -3134,10 +3142,19 @@
             }
         }
 
+        function getGainCategories() {
+            const list = [{ name: 'Vendas', icon: '💰' }, { name: 'Ganho Extra', icon: '💵' }];
+            (dbData.gainCategories || []).forEach(n => {
+                if (n && !list.some(c => c.name === n)) list.push({ name: n, icon: categoryIcons[n] || '💵' });
+            });
+            return list;
+        }
+
         function setupGainCategorySelect() {
             const selectElement = document.getElementById('categoryInput');
             selectElement.innerHTML = '<option value="" disabled selected>Categoria...</option>';
-            [{name: 'Vendas', icon: '💰'}, {name: 'Ganho Extra', icon: '💵'}].forEach(cat => {
+            getGainCategories().forEach(cat => {
+                if (!categoryIcons[cat.name]) categoryIcons[cat.name] = cat.icon;
                 const opt = document.createElement('option');
                 opt.value = cat.name; opt.textContent = `${cat.icon} ${cat.name}`;
                 selectElement.appendChild(opt);
@@ -3650,10 +3667,13 @@
             const targetMonth = dateVal.slice(0, 7);
             ensureMonthExists(targetMonth);
 
+            const partialGain = document.getElementById('gainPartialCheck').checked;
             dbData.months[targetMonth].gains.push({
-                id: generateId(), typeItem: 'gain', description: desc, category: cat, date: dateVal, time: timeVal, value: val, createdAt: Date.now()
+                id: generateId(), typeItem: 'gain', description: desc, category: cat, date: dateVal, time: timeVal, value: val, createdAt: Date.now(),
+                ...(partialGain ? { excludeFromIncome: true } : {})
             });
-            saveDB(); showNotification('gain', `Ganho: +${formatCurrency(val)}`, "Mais um resultado para a conta!");
+            saveDB(); showNotification('gain', `Ganho: +${formatCurrency(val)}`, partialGain ? "Somado na conta, sem alterar a Renda Mensal." : "Mais um resultado para a conta!");
+            document.getElementById('gainPartialCheck').checked = false;
             document.getElementById('descInput').value = ''; document.getElementById('valInput').value = ''; setDefaultDateForCurrentMonth(); isTimeInputFocused = false; updateDashboard();
         }
 
@@ -3692,10 +3712,16 @@
 
             const editCat = document.getElementById('editCategoryInput');
             if (foundType === 'gain') {
-                editCat.innerHTML = '<option value="Vendas">💰 Vendas</option><option value="Ganho Extra">💵 Ganho Extra</option>';
+                const gainCats = getGainCategories();
+                if (foundItem.category && !gainCats.some(c => c.name === foundItem.category)) gainCats.push({ name: foundItem.category, icon: categoryIcons[foundItem.category] || '💵' });
+                editCat.innerHTML = '';
+                gainCats.forEach(c => { const o = document.createElement('option'); o.value = c.name; o.textContent = `${c.icon} ${c.name}`; editCat.appendChild(o); });
                 document.getElementById('editPaymentWrapper').style.display = 'none';
                 document.getElementById('editRecurrentWrapper').style.display = 'none';
+                document.getElementById('editGainPartialWrapper').style.display = 'flex';
+                document.getElementById('editGainPartialCheck').checked = !!foundItem.excludeFromIncome;
             } else {
+                document.getElementById('editGainPartialWrapper').style.display = 'none';
                 setupCategorySelect();
                 setupPaymentMethodsSelect();
                 document.getElementById('editPaymentWrapper').style.display = 'block';
@@ -3925,7 +3951,12 @@
             lbl.textContent = `${nome}/${String(y % 100).padStart(2, '0')}`;
         }
 
+        function syncGainCategoryIcons() {
+            (dbData.gainCategories || []).forEach(n => { if (n && !categoryIcons[n]) categoryIcons[n] = '💵'; });
+        }
+
         function updateDashboard() {
+            syncGainCategoryIcons();
             updateMonthLabel();
             ensureMonthExists(currentMonth);
             renderTransactionsList();
@@ -4047,7 +4078,7 @@
         function getMonthTotalIncome(monthStr) {
             const m = dbData.months[monthStr];
             if (!m) return 0;
-            return (m.income || 0) + (m.gains || []).reduce((acc, curr) => acc + curr.value, 0);
+            return (m.income || 0) + (m.gains || []).filter(g => !g.excludeFromIncome).reduce((acc, curr) => acc + curr.value, 0);
         }
 
         function calculateStats() {
@@ -4108,7 +4139,7 @@
                     <div class="flex items-center gap-3 overflow-hidden">
                         <div class="w-9 h-9 rounded-xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex items-center justify-center shrink-0"><i class="fa-solid ${iconClass} text-xs"></i></div>
                         <div class="overflow-hidden">
-                            <p class="text-xs font-semibold flex items-center gap-1.5 truncate"><span class="truncate">${item.description}</span>${item.recurrent ? '<span class="text-[9px] bg-indigo-500/20 text-indigo-500 px-1.5 py-0.5 rounded-full">Fixa</span>' : ''}</p>
+                            <p class="text-xs font-semibold flex items-center gap-1.5 truncate"><span class="truncate">${item.description}</span>${item.excludeFromIncome ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-500 px-1.5 py-0.5 rounded-full" title="Não soma na Renda Mensal">Picado</span>' : ''}${item.recurrent ? '<span class="text-[9px] bg-indigo-500/20 text-indigo-500 px-1.5 py-0.5 rounded-full">Fixa</span>' : ''}</p>
                             <p class="text-[11px] opacity-70 truncate mt-0.5">${subtitle}</p>
                         </div>
                     </div>
@@ -4211,7 +4242,7 @@
                         <div class="flex items-center gap-3 overflow-hidden">
                             <div class="w-9 h-9 rounded-xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex items-center justify-center shrink-0"><i class="fa-solid fa-arrow-trend-up text-emerald-500 text-xs"></i></div>
                             <div class="overflow-hidden">
-                                <p class="text-xs font-semibold truncate"><span class="truncate">${item.description}</span></p>
+                                <p class="text-xs font-semibold truncate"><span class="truncate">${item.description}</span>${item.excludeFromIncome ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-500 px-1.5 py-0.5 rounded-full" title="Não soma na Renda Mensal">Picado</span>' : ''}</p>
                                 <p class="text-[11px] opacity-70 truncate mt-0.5">${subtitle}</p>
                             </div>
                         </div>
@@ -4686,6 +4717,10 @@
             if (incoming.categories) {
                 dbData.categories = Object.assign({}, dbData.categories || {}, incoming.categories);
             }
+            if (Array.isArray(incoming.gainCategories)) {
+                if (!Array.isArray(dbData.gainCategories)) dbData.gainCategories = [];
+                incoming.gainCategories.forEach(n => { if (!dbData.gainCategories.includes(n)) dbData.gainCategories.push(n); });
+            }
             if (Array.isArray(incoming.cards)) {
                 if (!dbData.cards) dbData.cards = [];
                 incoming.cards.forEach(card => {
@@ -4869,7 +4904,7 @@
                 }
 
                 // Substitui (não soma) os dados locais pelos do GitHub
-                ['categories', 'months', 'cards', 'goals', 'categoryBudgets'].forEach(k => {
+                ['categories', 'gainCategories', 'months', 'cards', 'goals', 'categoryBudgets'].forEach(k => {
                     if (parsed[k] !== undefined) dbData[k] = JSON.parse(JSON.stringify(parsed[k]));
                 });
                 if (!dbData.cards) dbData.cards = [];
@@ -4940,10 +4975,26 @@
             document.getElementById('closeHistoryModalBtn').addEventListener('click', () => historyModal.classList.add('hidden'));
 
             const catModal = document.getElementById('categoryModal');
-            document.getElementById('newCategoryBtn').addEventListener('click', () => { if (activeTab === 'gain') return; catModal.classList.remove('hidden'); setTimeout(() => catModal.classList.remove('opacity-0'), 10); });
+            const setCatModalMode = () => {
+                const isGain = activeTab === 'gain';
+                document.getElementById('categoryModalTitle').textContent = isGain ? 'Nova Categoria de Ganho' : 'Nova Categoria';
+                document.getElementById('newCatType').style.display = isGain ? 'none' : '';
+            };
+            document.getElementById('newCategoryBtn').addEventListener('click', () => { setCatModalMode(); catModal.classList.remove('hidden'); setTimeout(() => catModal.classList.remove('opacity-0'), 10); });
             document.getElementById('closeModalBtn').addEventListener('click', () => catModal.classList.add('hidden'));
 
-            document.getElementById('saveCategoryBtn').addEventListener('click', () => { const name = document.getElementById('newCatName').value.trim(), type = document.getElementById('newCatType').value; if(name) { dbData.categories[name] = type; saveDB(); setupCategorySelect(); document.getElementById('categoryInput').value = name; document.getElementById('newCatName').value = ''; catModal.classList.add('hidden'); } });
+            document.getElementById('saveCategoryBtn').addEventListener('click', () => { const name = document.getElementById('newCatName').value.trim(), type = document.getElementById('newCatType').value;
+                if (name && activeTab === 'gain') {
+                    if (!Array.isArray(dbData.gainCategories)) dbData.gainCategories = [];
+                    const exists = getGainCategories().some(c => c.name.toLowerCase() === name.toLowerCase());
+                    const finalName = exists ? getGainCategories().find(c => c.name.toLowerCase() === name.toLowerCase()).name : name;
+                    if (!exists) dbData.gainCategories.push(name);
+                    saveDB(); setupGainCategorySelect();
+                    document.getElementById('categoryInput').value = finalName;
+                    document.getElementById('newCatName').value = ''; catModal.classList.add('hidden');
+                    return;
+                }
+                if(name) { dbData.categories[name] = type; saveDB(); setupCategorySelect(); document.getElementById('categoryInput').value = name; document.getElementById('newCatName').value = ''; catModal.classList.add('hidden'); } });
 
             const editModal = document.getElementById('editModal');
             document.getElementById('closeEditModalBtn').addEventListener('click', () => editModal.classList.add('hidden'));
@@ -4955,6 +5006,9 @@
                 if (itemFound && desc && cat && !isNaN(val)) {
                     itemFound.description = desc; itemFound.category = cat; itemFound.date = dateVal; itemFound.time = document.getElementById('editTimeInput').value; itemFound.value = val;
                     let m = dateVal.slice(0, 7);
+                    if (typeItem === 'gain') {
+                        if (document.getElementById('editGainPartialCheck').checked) itemFound.excludeFromIncome = true; else delete itemFound.excludeFromIncome;
+                    }
                     if (typeItem === 'expense') {
                         const editedPaymentMethod = document.getElementById('editPaymentMethodInput').value;
                         itemFound.paymentMethod = editedPaymentMethod;
